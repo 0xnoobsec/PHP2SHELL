@@ -8,16 +8,11 @@ session attack patterns that a PHP upgrade does not fix.
 the isolated laboratory in `lab/`. See [SECURITY.md](SECURITY.md) before running
 anything.
 
-## The series
+## The write-up
 
-| Part | File | What it covers |
-|---|---|---|
-| 1 | [docs/PHP2SHELL_PART1_FOUNDATIONS.md](docs/PHP2SHELL_PART1_FOUNDATIONS.md) | lifecycle, sessions, a beginner Docker lab, C fundamentals, OOM handling |
-| 2 | [docs/PHP2SHELL_PART2_SOURCE_ANALYSIS.md](docs/PHP2SHELL_PART2_SOURCE_ANALYSIS.md) | the 8.4.26 → 8.4.27 source diff and what it does and does not establish |
-| 3 | [docs/PHP2SHELL_PART3_RESEARCH.md](docs/PHP2SHELL_PART3_RESEARCH.md) | the five-build matrix, 20 trials each, GDB analysis, all three categories |
-
-A single-file technical report with the full methodology is in
-[docs/WRITEUP.md](docs/WRITEUP.md).
+The full three-part study — foundations, source analysis, and the reproduction —
+is published at **cybersecly.com**. This repository holds the lab and the harness
+that the study describes.
 
 ## Headline results
 
@@ -32,7 +27,6 @@ A single-file technical report with the full methodology is in
 ## Layout
 
 ```text
-docs/       the series and the technical report
 lab/        Dockerfiles, php.ini files, test applications (cat-a, cat-b, cat-c*)
 poc/        harness: php2shell.py, validators, minimizer, debug helpers
 evidence/   raw container logs and the Category B verification record
