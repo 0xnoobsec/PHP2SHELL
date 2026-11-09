@@ -1,0 +1,30 @@
+{
+  "tool": "c_minimize v1.0.0",
+  "generated": "2026-10-22T20:23:15.851398Z",
+  "baseline": {
+    "parts": 600,
+    "depth": 45,
+    "trials": 5,
+    "oom": 5,
+    "hits": 5,
+    "ok": true
+  },
+  "candidate": {
+    "parts": 493,
+    "depth": 45,
+    "trials": 5,
+    "oom": 5,
+    "hits": 2,
+    "ok": true
+  },
+  "patched_control": {
+    "parts": 493,
+    "depth": 45,
+    "trials": 5,
+    "oom": 5,
+    "hits": 0,
+    "ok": false
+  },
+  "differential_preserved": true,
+  "scope": "Corruption is a denial-of-service observation; no RCE attempted."
+}

@@ -1,0 +1,24 @@
+{
+  "check": "category_b_destructor_after_decode_failure",
+  "performed": "2026-11-10",
+  "target": "php2shell-cat-b (PHP 8.1.34, php_serialize seed / php fire)",
+  "method": {
+    "seed": "POST /seed/ with data=x|<serialized object>",
+    "fire": "GET /fire/ with the same PHPSESSID"
+  },
+  "observed": {
+    "seed_status": 200,
+    "seed_reported_handler": "php_serialize",
+    "fire_status": 200,
+    "fire_elapsed_ms": 45,
+    "decode_warning_in_body": true,
+    "destructor_output_in_body": true,
+    "excerpt": "[GADGET] __destruct fired: uid=33(www-data) ... <br /> <b>Warning</b>: session_start(...)"
+  },
+  "interpretation": [
+    "The destructor's output and the decode-failure warning appeared in the same HTTP response.",
+    "That confirms the destructor executed during the request, despite the decode failure.",
+    "Exact timing was not established; behaviour is version- and input-dependent."
+  ],
+  "caveat": "Single observation on one lab build; not a general guarantee about PHP session handling."
+}
