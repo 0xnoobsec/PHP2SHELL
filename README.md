@@ -1,62 +1,68 @@
-# php2shell — laboratory study of PHP2Shell
+# php2shell - PHP2Shell Research Lab
 
-A three-part study of PHP's request lifecycle, session handling, and out-of-memory
-behavior, covering CVE-2026-109618 and CVE-2026-109619, plus two application-level
-session attack patterns that a PHP upgrade does not fix.
+This repository contains the lab setup, proof-of-concept code, test harness, and logs from my investigation of PHP2Shell (CVE-2026-109618 and CVE-2026-109619).
 
-**This repository contains working exploitation code.** It was used only against
-the isolated laboratory in `lab/`. See [SECURITY.md](SECURITY.md) before running
-anything.
+I also tested two application-level session attack patterns that remain possible on patched PHP versions.
 
-## The write-up
+**This repository contains working exploitation code.** All testing was performed in an isolated lab environment. Read [SECURITY.md](SECURITY.md) before running anything.
 
-The full three-part study — foundations, source analysis, and the reproduction —
-is published at **cybersecly.com**. This repository holds the lab and the harness
-that the study describes.
+## Write-up
 
-## Headline results
+I've documented the research in a three-part series on **[cybersecly.com](https://cybersecly.com)**:
 
-| Research question | Finding |
+1. **Foundations:** PHP request lifecycle, sessions, memory management, and OOM handling.
+2. **Source analysis:** Comparing PHP 8.4.26 and 8.4.27 to understand the changes.
+3. **Reproduction and findings:** Lab setup, test results, GDB analysis, and lessons from failed attempts.
+
+This repository contains the code and supporting evidence discussed in the articles.
+
+## Results
+
+| Test | Result |
 |---|---|
-| Ordinary OOM reproducible | yes, all five tested builds |
-| Allocator corruption observed | 10/20 trials on PHP 8.4.26 |
-| Corruption on patched comparisons | 0/20 on each of 8.4.27, 8.3.36, 8.2.35, 8.5.12 |
-| Original corruption site identified | no |
-| RCE through the memory corruption | no |
+| OOM reproduced | All five PHP builds |
+| Allocator corruption on PHP 8.4.26 | 10/20 trials |
+| Allocator corruption on PHP 8.4.27 | 0/20 trials |
+| Allocator corruption on PHP 8.3.36 | 0/20 trials |
+| Allocator corruption on PHP 8.2.35 | 0/20 trials |
+| Allocator corruption on PHP 8.5.12 | 0/20 trials |
+| Original corruption site identified | No |
+| RCE through memory corruption | Not demonstrated |
 
-## Layout
+The results reflect the conditions of my lab. The 10/20 figure is an observed result, not an estimated exploitation probability. Similarly, 0/20 does not mean corruption is impossible on patched builds.
+
+## Repository structure
 
 ```text
-lab/        Dockerfiles, php.ini files, test applications (cat-a, cat-b, cat-c*)
-poc/        harness: php2shell.py, validators, minimizer, debug helpers
-evidence/   raw container logs and the Category B verification record
+lab/        Dockerfiles, PHP configurations, and test applications
+            (cat-a, cat-b, cat-c*)
+
+poc/        php2shell.py, validators, minimizer, and debugging helpers
+
+evidence/   Raw container logs and Category B verification records
 ```
 
 ## Running the lab
 
+Start the application-level test environments:
+
 ```bash
 cd lab
-docker compose up -d --build          # cat-a (8081), cat-b (8082), cat-c (8083)
-cd cat-c-vuln && docker build -t p2s-c8426 . && docker run -d -p 8084:80 p2s-c8426
+docker compose up -d --build
 ```
 
-The vulnerable build is PHP 8.4.26 with a 16M limit and a single prefork worker.
-Patched comparisons use the same configuration with 8.4.27, 8.3.36, 8.2.35 and
-8.5.12.
+Services:
 
-## Scope and ethics
+- Category A: `localhost:8081`
+- Category B: `localhost:8082`
+- Category C: `localhost:8083`
 
-* Everything here targets a local, disposable environment.
-* Do not point the harness at systems you do not own or have written authorization
-  to test.
-* The application-level chains (A and B) are ordinary web vulnerabilities. They
-  are included because defenders need to recognize them, not because publishing a
-  PHP upgrade advisory is sufficient — it is not.
+Build and start the vulnerable PHP 8.4.26 environment separately:
 
-## License
+```bash
+cd cat-c-vuln
+docker build -t p2s-c8426 .
+docker run -d -p 8084:80 p2s-c8426
+```
 
-Code: MIT (see [LICENSE](LICENSE)). Prose: CC BY 4.0.
-
-## Credits
-
-The original PHP2Shell research is by Calif: https://calif.io/php2shell/
+The vulnerable environment uses PHP 8.4.26,
