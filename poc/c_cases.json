@@ -1,0 +1,76 @@
+{
+  "tool": "c_cases",
+  "generated_note": "Observed on PHP 8.4.26 (vulnerable) vs 8.4.27 (patched), 16M/64M, prefork, 1 worker.",
+  "cases": [
+    {
+      "id": "canonical",
+      "parts": 600,
+      "depth": 45,
+      "records": 27000,
+      "observed": {
+        "vuln_oom": "5/5",
+        "vuln_corruption": "5/5",
+        "patched_oom": "5/5",
+        "patched_corruption": "0/5"
+      },
+      "role": "regression-gate",
+      "use": "CI gate and patch-validation comparison. Any test asserting vulnerable-vs-patched must use this case."
+    },
+    {
+      "id": "secondary-intermittent",
+      "parts": 493,
+      "depth": 45,
+      "records": 22185,
+      "observed": {
+        "vuln_oom": "5/5",
+        "vuln_corruption": "2/5",
+        "patched_oom": "5/5",
+        "patched_corruption": "0/5"
+      },
+      "role": "instability-probe",
+      "use": "Measure failure-rate variance; report as a rate over repeated trials, never as a pass/fail gate."
+    },
+    {
+      "id": "negative-control-560",
+      "parts": 560,
+      "depth": 45,
+      "records": 25200,
+      "observed": {
+        "vuln_oom": "5/5",
+        "vuln_corruption": "0/5",
+        "patched_oom": "5/5",
+        "patched_corruption": "0/5"
+      },
+      "role": "negative-control",
+      "use": "Control for this configuration only; not evidence that this size can never trigger corruption."
+    },
+    {
+      "id": "negative-control-520",
+      "parts": 520,
+      "depth": 45,
+      "records": 23400,
+      "observed": {
+        "vuln_oom": "5/5",
+        "vuln_corruption": "0/5",
+        "patched_oom": "5/5",
+        "patched_corruption": "0/5"
+      },
+      "role": "negative-control",
+      "use": "Control for this configuration only; not evidence that this size can never trigger corruption."
+    },
+    {
+      "id": "rejected-145",
+      "parts": 145,
+      "depth": 45,
+      "records": 6525,
+      "observed": {
+        "vuln_oom": "5/5",
+        "vuln_corruption": "5/5",
+        "patched_oom": "0/5",
+        "patched_corruption": "0/5"
+      },
+      "role": "rejected",
+      "use": "Fails acceptance: the patched build no longer reaches OOM, so no-corruption is uninformative."
+    }
+  ]
+}

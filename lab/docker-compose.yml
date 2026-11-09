@@ -1,0 +1,32 @@
+version: "3.8"
+
+# php2shell CVE-2026-109618 / CVE-2026-109619 testing lab
+# Three categories, three containers, three ports
+
+services:
+  cat-a:
+    build: ./cat-a
+    container_name: php2shell-cat-a
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    # Category A: Session filename injection + LFI race condition
+    # CVE-2026-109619 flaw 2: unvalidated filename in progress array
+
+  cat-b:
+    build: ./cat-b
+    container_name: php2shell-cat-b
+    ports:
+      - "8082:80"
+    restart: unless-stopped
+    # Category B: Cross-directory serialize_handler mismatch + POP chains
+    # CVE-2026-109619 flaw 3: destructor fires on decode failure
+
+  cat-c:
+    build: ./cat-c
+    container_name: php2shell-cat-c
+    ports:
+      - "8083:80"
+    restart: unless-stopped
+    # Category C: UAF via VAR_ENTRIES_MAX overflow
+    # CVE-2026-109618: back-reference overflow past 1018 entries
