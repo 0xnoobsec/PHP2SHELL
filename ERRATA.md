@@ -228,3 +228,25 @@ PHP. The lab record behind that is command execution on PHP 7.4.33, 8.1.34 and
 No raw logs of those runs were kept, so this repository holds no evidence for
 them beyond that record. The compose file builds both apps on PHP 8.1 by
 default, which is end-of-life and never received the October 2026 fixes.
+
+### 9. Replication run, and a fail-open bug in recount.py
+
+Two things, dated 17-18 November 2026.
+
+**The claim reproduces.** With the fixed validator (`c_validate v2.2.0`), a
+fresh 20-trial run against rebuilt PHP 8.4.26 and 8.4.27 images gave the same
+corrected result: 20 of 20 trials on 8.4.26 reached the allocator abort, 0 of 20
+on 8.4.27. Gate PASS, differential Confirmed. The logs and the report are in
+`evidence/replication-2026-11-17/`, and `poc/recount.py` checks them in place:
+
+```bash
+python3 poc/recount.py --report evidence/replication-2026-11-17/REPORT.json --root .
+```
+
+**recount.py used to fail open.** When an evidence log was missing it printed
+"The recount agrees with the report" and exited 0: an unknown was reported as
+agreement. That is the same class of mistake as the original counter, pointed
+the other way. It now prints INCONCLUSIVE, writes `agrees_with_report: null`,
+and exits 2. Evidence paths also resolve beside the report, so a lab that copied
+only `poc/` still works. A regression test covers the missing-log case.
+Fixed in 570cfaa.
