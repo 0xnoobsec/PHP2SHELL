@@ -13,8 +13,8 @@ I also tested two application-level session attack patterns that remain possible
 I've documented the research in a three-part series on **[cybersecly.com](https://cybersecly.com/resources)**:
 
 1. **[Part 1: Internals and sessions](https://cybersecly.com/resources/php2shell-part-1-internals-and-sessions).** PHP request lifecycle, sessions, memory management, and OOM handling.
-2. **Part 2: Source analysis and patches.** Comparing PHP 8.4.26 and 8.4.27 to understand the changes.
-3. **Part 3: Reproduction and results.** Lab setup, test results, GDB analysis, and lessons from failed attempts.
+2. **[Part 2: Source analysis and patches](https://cybersecly.com/resources/php2shell-part-2-source-analysis-and-patches).** Comparing PHP 8.4.26 and 8.4.27 to understand the changes.
+3. **[Part 3: Reproduction and results](https://cybersecly.com/resources/php2shell-part-3-reproduction-and-results).** Lab setup, test results, GDB analysis, and lessons from failed attempts, including the counting error behind the correction above.
 
 This repository contains the code and supporting evidence discussed in the articles.
 
