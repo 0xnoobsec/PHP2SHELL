@@ -224,6 +224,38 @@ class SyntheticReports(unittest.TestCase):
         self.assertIsNone(result["recount"])
 
 
+
+class CommandLine(unittest.TestCase):
+    """The tool must fail closed: missing evidence is not agreement."""
+
+    def test_missing_evidence_exits_nonzero_and_says_inconclusive(self):
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            report = {
+                "tool": "c_validate v2.2.0",
+                "generated": "2026-10-22T21:20:05.180456Z",
+                "targets": [{
+                    "name": "t",
+                    "kind": "patched",
+                    "records": [{"trial": 0, "ts": "2026-10-22T21:05:09.000000Z",
+                                 "corruption": False, "pid_before": 1}],
+                    "evidence": {"path": "evidence/absent.log", "sha256": "0" * 64},
+                }],
+            }
+            path = os.path.join(tmp, "c_validation.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(report, handle)
+            proc = subprocess.run(
+                [sys.executable, os.path.join(POC, "recount.py"),
+                 "--report", path, "--root", tmp],
+                capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+            self.assertIn("INCONCLUSIVE", proc.stdout)
+            self.assertNotIn("The recount agrees", proc.stdout)
+
+
 class TrialWindows(unittest.TestCase):
     def test_each_window_runs_from_the_previous_timestamp_to_its_own(self):
         base = datetime(2026, 10, 22, 21, 5, 0, tzinfo=timezone.utc)

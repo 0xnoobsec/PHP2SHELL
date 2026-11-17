@@ -58,7 +58,23 @@ def trial_windows(times):
     return [(start, end + SLACK) for start, end in zip(starts, times)]
 
 
-def recount_target(target, root):
+def resolve_evidence(root, rel, report_dir=None):
+    """Find the evidence file, tolerating a report kept beside its own logs.
+
+    The committed layout puts logs at <root>/evidence/. A lab that copied
+    only poc/ may keep them at <report_dir>/evidence/. Both are the same
+    files; preferring the root keeps the published layout authoritative.
+    """
+    candidates = [os.path.join(root, rel)]
+    if report_dir:
+        candidates.append(os.path.join(report_dir, rel))
+    for candidate in candidates:
+        if os.path.isfile(candidate):
+            return candidate
+    return candidates[0]
+
+
+def recount_target(target, root, report_dir=None):
     records = target.get("records") or []
     evidence = target.get("evidence") or {}
     out = {
@@ -71,8 +87,9 @@ def recount_target(target, root):
             "worker_aborts": sum(1 for r in records if r.get("worker_aborted")),
         },
     }
-    path = os.path.join(root, evidence.get("path") or "")
-    if not records or not evidence.get("path") or not os.path.isfile(path):
+    rel = evidence.get("path") or ""
+    path = resolve_evidence(root, rel, report_dir) if rel else ""
+    if not records or not rel or not os.path.isfile(path):
         out["evidence"] = {"path": evidence.get("path"),
                            "found": bool(evidence.get("path")) and os.path.isfile(path)}
         out["recount"] = None
@@ -160,7 +177,9 @@ def main():
         raw = handle.read()
     report = json.loads(raw)
     try:
-        targets = [recount_target(t, args.root) for t in report.get("targets") or []]
+        report_dir = os.path.dirname(os.path.abspath(args.report))
+        targets = [recount_target(t, args.root, report_dir)
+                   for t in report.get("targets") or []]
     except ValueError as error:
         print("recount: %s" % error, file=sys.stderr)
         return 2
@@ -190,6 +209,7 @@ def main():
     print("%-8s %-11s %-7s %-20s %-30s %s"
           % ("target", "kind", "trials", "report: corruption", "raw log: corruption aborts", "agree"))
     disagree = False
+    unknown = []
     problems = []
     for t in targets:
         if t["recount"] is None:
@@ -198,6 +218,7 @@ def main():
                   % (t["name"], t["kind"], t["trials"],
                      "%d/%d" % (t["report"]["corruption"], t["trials"]), why, "?"))
             problems.append("%s: %s" % (t["name"], why))
+            unknown.append(t["name"])
             continue
         raw_cell = "%d/%d (by %s)" % (t["recount"]["trials_with_heap_corruption"], t["trials"],
                                       t["recount"]["attribution"])
@@ -218,9 +239,12 @@ def main():
             problems.append("%s: log is not in UTC (%s); timestamps were compared as UTC"
                             % (t["name"], ", ".join(t["evidence"]["access_log_utc_offsets"])))
 
-    result["agrees_with_report"] = not disagree
+    result["agrees_with_report"] = None if unknown else not disagree
     result["problems"] = problems
-    if disagree:
+    if unknown:
+        print("\nThe recount is INCONCLUSIVE: no usable evidence for %s."
+              % ", ".join(unknown))
+    elif disagree:
         print("\nThe recount DISAGREES with the report's per-trial corruption flags.")
     else:
         print("\nThe recount agrees with the report.")
@@ -232,6 +256,8 @@ def main():
             json.dump(result, handle, indent=2)
             handle.write("\n")
         print("recount -> %s" % args.out)
+    if unknown:
+        return 2
     return 1 if (args.strict and (disagree or problems)) else 0
 
 
