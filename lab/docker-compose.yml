@@ -1,32 +1,40 @@
-version: "3.8"
-
-# php2shell CVE-2026-109618 / CVE-2026-109619 testing lab
-# Three categories, three containers, three ports
+# PHP2Shell lab: the three application containers for Categories A, B and C.
+#
+# Every port is published on 127.0.0.1 only. These apps are deliberately
+# vulnerable and two of them have working command-execution chains: never
+# publish them on a network interface.
+#
+# No restart policy: the lab must not come back by itself after a reboot.
+#
+# These images default to PHP 8.1. The PHP 8.4.26 environment used for the
+# CVE-2026-109618 study is built separately from lab/cat-c-vuln (see README.md).
 
 services:
   cat-a:
     build: ./cat-a
     container_name: php2shell-cat-a
     ports:
-      - "8081:80"
-    restart: unless-stopped
-    # Category A: Session filename injection + LFI race condition
-    # CVE-2026-109619 flaw 2: unvalidated filename in progress array
+      - "127.0.0.1:8081:80"
+    # Category A (application-level): an include sink plus
+    # session.upload_progress. While an upload is in flight, PHP stores the
+    # client-supplied filename in the session file; including that file runs it.
+    # Not one of the two CVEs, and not fixed by a PHP upgrade.
 
   cat-b:
     build: ./cat-b
     container_name: php2shell-cat-b
     ports:
-      - "8082:80"
-    restart: unless-stopped
-    # Category B: Cross-directory serialize_handler mismatch + POP chains
-    # CVE-2026-109619 flaw 3: destructor fires on decode failure
+      - "127.0.0.1:8082:80"
+    # Category B (application-level): two directories share one session store
+    # but use different serialize handlers (php_serialize writes, php reads),
+    # so a stored string can be read back as a serialized object.
+    # Not one of the two CVEs, and not fixed by a PHP upgrade.
 
   cat-c:
     build: ./cat-c
     container_name: php2shell-cat-c
     ports:
-      - "8083:80"
-    restart: unless-stopped
-    # Category C: UAF via VAR_ENTRIES_MAX overflow
-    # CVE-2026-109618: back-reference overflow past 1018 entries
+      - "127.0.0.1:8083:80"
+    # Category C baseline: an unserialize() endpoint for the back-reference
+    # probe, which is detection only. The CVE-2026-109618 study does not run
+    # against this container; it runs against lab/cat-c-vuln.

@@ -16,28 +16,31 @@ Usage:
     --patched-url http://127.0.0.1:8088/decode.php --patched-container p2s-c8427 \
     --trials 3 --final-trials 5 --out c_minimized.json
 
+v1.1 (see ERRATA.md): a "hit" is now a heap-corrupted line appearing in the
+container's whole log during the trial. v1.0 compared
+`docker logs --tail 400 | grep -c` before and after, which stops rising once
+old abort lines scroll out of the window and so reports aborting trials as
+clean. The intermediate-size results recorded with v1.0 (c_minimized.json and
+the non-canonical entries of c_cases.json) were produced by that counter and
+should not be relied on. v1.0 is kept as archive/c_minimize_v1.0.0.py.
+
 Authorized laboratory testing only.
 """
-import argparse, json, subprocess, sys, time, uuid
+import argparse, json, sys, time, uuid
 from datetime import datetime, timezone
 
 import requests
 
-ABORT_PAT = "zend_mm_heap corrupted|exit signal|Segmentation fault"
+from logcount import container_counts, delta
+
+VERSION = "1.1.0"
+# The dying child prints the allocator message before it aborts; give the log
+# driver a moment to deliver it before counting.
+SETTLE = 0.5
 
 
 def now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-def abort_count(container):
-    out = subprocess.run(
-        "docker logs --tail 400 %s 2>&1 | grep -cE '%s'" % (container, ABORT_PAT),
-        shell=True, capture_output=True, timeout=25).stdout.decode()
-    try:
-        return int(out.strip() or 0)
-    except ValueError:
-        return 0
 
 
 def trigger(url, sid, parts, depth):
@@ -79,12 +82,17 @@ def trigger(url, sid, parts, depth):
 def measure(url, container, parts, depth, trials):
     ooms = hits = 0
     for i in range(trials):
-        before = abort_count(container)
+        before = container_counts(container)
         oom = trigger(url, "min%02d%s" % (i, uuid.uuid4().hex[:6]), parts, depth)
-        after = abort_count(container)
+        time.sleep(SETTLE)
+        change = delta(before, container_counts(container))
+        if change is None:
+            # An unreadable log used to count as "no hit". It is not a result.
+            sys.exit("[!] cannot read the log of container %r; refusing to count blind"
+                     % container)
         if oom:
             ooms += 1
-        if after > before:
+        if change["heap"] > 0:
             hits += 1
         time.sleep(0.25)
     return {"parts": parts, "depth": depth, "trials": trials,
@@ -130,7 +138,13 @@ def main():
     ap.add_argument("--out", default="c_minimized.json")
     a = ap.parse_args()
 
-    print("c_minimize  %s" % now())
+    print("c_minimize v%s  %s" % (VERSION, now()))
+    # Every measurement depends on reading the container log. Find out now,
+    # before any request is sent, rather than half-way through a search.
+    for label, container in (("vulnerable", a.vuln_container), ("patched", a.patched_container)):
+        if container and container_counts(container) is None:
+            sys.exit("[!] cannot read the log of the %s container %r; nothing was sent"
+                     % (label, container))
     print("[*] baseline 600x45")
     base = measure(a.vuln_url, a.vuln_container, 600, 45, a.final_trials)
     print("    oom=%d/%d hits=%d/%d" % (base["oom"], a.final_trials, base["hits"], a.final_trials))
@@ -160,7 +174,7 @@ def main():
                   % (p2, d, cand["oom"], cand["hits"], patched["oom"], patched["hits"]))
 
     report = {
-        "tool": "c_minimize v1.0.0",
+        "tool": "c_minimize v%s" % VERSION,
         "generated": now(),
         "baseline": base,
         "candidate": cand,

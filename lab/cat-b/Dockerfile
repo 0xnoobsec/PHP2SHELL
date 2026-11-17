@@ -1,3 +1,6 @@
+# PHP 8.1 is end-of-life and never received the October 2026 fixes. The weakness
+# in this container is the configuration, not the PHP version: to run it on a
+# patched release, build with  --build-arg PHP_VERSION=8.4.27
 ARG PHP_VERSION=8.1
 FROM php:${PHP_VERSION}-apache
 

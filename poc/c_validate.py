@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""c_validate v2 -- evidence-model validator for CVE-2026-109618.
+"""c_validate v2.2 -- evidence-model validator for CVE-2026-109618.
+
+Changes in v2.2 (see ERRATA.md):
+  * per-trial corruption is counted over the container's whole log. v2.1 and
+    earlier compared `docker logs --tail 400 | grep -c` before and after each
+    trial; that sliding window stops rising once old abort lines scroll out,
+    and it marked ten of twenty aborting trials on PHP 8.4.26 as clean;
+  * "zend_mm_heap corrupted" lines and Apache exit notices are counted
+    separately instead of as one two-lines-per-abort number;
+  * a trial whose log cannot be read is recorded as unknown (null), not as
+    "no corruption", and an unknown fails the gate;
+  * the evidence file is the complete container log, written as the exact
+    bytes that are hashed.
+  The request sequence itself is unchanged. The v2.1.0 script that produced
+  the October 2026 report is kept as archive/c_validate_v2.1.0.py.
 
 Changes over v1:
   * multi-dimensional verdict fields (Yes/No/Unknown), never a single label;
@@ -21,8 +35,9 @@ from datetime import datetime, timezone
 
 import requests
 
-ABORT_PAT = "zend_mm_heap corrupted|exit signal|Segmentation fault"
-HEAP_PAT = "zend_mm_heap corrupted"
+from logcount import container_counts, count_signals, delta, read_container_log
+
+VERSION = "2.2.0"
 
 
 def now():
@@ -68,14 +83,33 @@ def wilson(k, n, z=1.96):
     return [round(max(0.0, (c - m) / d), 4), round(min(1.0, (c + m) / d), 4)]
 
 
-def abort_count(container):
-    if not container:
-        return None
-    out = sh("docker logs --tail 400 %s 2>&1 | grep -cE '%s'" % (container, ABORT_PAT))
-    try:
-        return int(out.strip() or 0)
-    except ValueError:
-        return None
+def counts_after_trial(container, before, expect_abort, wait=3.0, step=0.25):
+    """Whole-log counts once a trial has finished.
+
+    Apache's parent writes the exit notice when it reaps the child, which can
+    be up to a second after the client sees the connection drop. When the trial
+    shows signs of a dead worker and no notice has appeared yet, wait briefly
+    for it instead of recording the abort against the next trial.
+    """
+    after = container_counts(container)
+    if before is None or after is None or not expect_abort:
+        return after
+    deadline = time.time() + wait
+    while after is not None and after["exit"] <= before["exit"] and time.time() < deadline:
+        time.sleep(step)
+        after = container_counts(container)
+    return after
+
+
+def worker_aborted(pid_before, pid_after, change):
+    """True / False, or None when neither the pids nor the log can say."""
+    if pid_before and pid_after and pid_before != pid_after:
+        return True
+    if change is not None and change["exit"] > 0:
+        return True
+    if change is not None or (pid_before and pid_after):
+        return False
+    return None
 
 
 def probe_pid(url):
@@ -149,52 +183,68 @@ def trigger(url, sid, probe_url=None):
 
 
 def capture_log(container, path):
-    if not container:
+    """Save the container's complete log and describe it.
+
+    The whole log, not a tail, so the evidence always reaches back past the
+    start of the run. Written as bytes so the file on disk is exactly what was
+    hashed, on any platform.
+    """
+    text = read_container_log(container, timeout=120)
+    if text is None:
         return None
-    txt = sh("docker logs --tail 500 %s 2>&1" % container, timeout=40)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as fh:
-        fh.write(txt)
-    return {"path": path, "sha256": hashlib.sha256(txt.encode()).hexdigest(),
-            "bytes": len(txt),
-            "heap_lines": sum(1 for l in txt.splitlines() if "zend_mm_heap corrupted" in l),
-            "abort_lines": sum(1 for l in txt.splitlines() if "exit signal" in l)}
+    data = text.encode("utf-8")
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "wb") as fh:
+        fh.write(data)
+    counts = count_signals(text)
+    return {"path": path, "sha256": hashlib.sha256(data).hexdigest(),
+            "bytes": len(data), "lines": counts["lines"],
+            "heap_lines": counts["heap"], "abort_lines": counts["exit"]}
 
 
 def run_target(name, url, kind, container, probe_url, trials, evdir):
     print("[*] %-10s %s (%s)" % (name, url, kind), flush=True)
     prov = php_provenance(container)
-    before_all = abort_count(container)
+    before_all = container_counts(container)
     records = []
     for i in range(trials):
-        b0 = abort_count(container)
+        c0 = container_counts(container)
         rec = trigger(url, "ev%03d%s" % (i, uuid.uuid4().hex[:6]), probe_url)
-        b1 = abort_count(container)
+        pid_changed = bool(rec["pid_before"] and rec["pid_after"]
+                           and rec["pid_before"] != rec["pid_after"])
+        c1 = counts_after_trial(container, c0,
+                                expect_abort=bool(rec["b_error"]) or pid_changed)
+        change = delta(c0, c1)
         rec["trial"] = i
         rec["ts"] = now()
-        rec["aborts_this_trial"] = None if (b0 is None or b1 is None) else max(0, b1 - b0)
-        rec["corruption"] = bool((rec["aborts_this_trial"] or 0) > 0)
-        rec["worker_aborted"] = bool(rec["corruption"] or
-                                     (rec["pid_before"] and rec["pid_after"] and
-                                      rec["pid_before"] != rec["pid_after"]))
+        rec["heap_lines"] = None if change is None else change["heap"]
+        rec["exit_notices"] = None if change is None else change["exit"]
+        # None means the log could not be read: unknown, not "no corruption".
+        rec["corruption"] = None if change is None else change["heap"] > 0
+        rec["worker_aborted"] = worker_aborted(rec["pid_before"], rec["pid_after"], change)
         records.append(rec)
         time.sleep(0.25)
-    after_all = abort_count(container)
+    after_all = container_counts(container)
     ev = capture_log(container, os.path.join(evdir, "%s.log" % name))
 
     oom_k = sum(1 for r in records if r["oom"])
-    cor_k = sum(1 for r in records if r["corruption"])
+    known = [r for r in records if r["corruption"] is not None]
+    cor_k = sum(1 for r in known if r["corruption"])
     ab_k = sum(1 for r in records if r["worker_aborted"])
+    run = delta(before_all, after_all)
     stats = {
         "trials": trials,
         "oom_yes": oom_k, "oom_rate": round(oom_k / trials, 3),
         "oom_ci95": wilson(oom_k, trials),
-        "corruption_yes": cor_k, "corruption_rate": round(cor_k / trials, 3),
-        "corruption_ci95": wilson(cor_k, trials),
-        "corruption_upper95_onesided": upper95_onesided(cor_k, trials),
+        "corruption_yes": cor_k,
+        "corruption_unknown": trials - len(known),
+        "corruption_rate": round(cor_k / len(known), 3) if known else None,
+        "corruption_ci95": wilson(cor_k, len(known)),
+        "corruption_upper95_onesided": upper95_onesided(cor_k, len(known)),
         "worker_aborts": ab_k,
-        "abort_events": None if (before_all is None or after_all is None)
-                        else max(0, after_all - before_all),
+        # one exit notice per dead worker, over the whole run
+        "abort_events": None if run is None else run["exit"],
+        "heap_lines": None if run is None else run["heap"],
     }
     return {"name": name, "url": url, "kind": kind, "container": container,
             "probe_url": probe_url, "provenance": prov, "stats": stats,
@@ -205,10 +255,22 @@ def verdict(t, diff, attribution_artifact, creation_evidence):
     s = t["stats"]
     def tri(b):
         return "Yes" if b else ("No" if s["trials"] else "Unknown")
+    if s["corruption_yes"] > 0:
+        corruption = "Yes"
+    elif s["trials"] and s["corruption_unknown"] == 0:
+        corruption = "No"
+    else:
+        corruption = "Unknown"
+    if s["worker_aborts"] > 0:
+        aborted = "Yes"
+    elif s["trials"] and all(r["worker_aborted"] is False for r in t["records"]):
+        aborted = "No"
+    else:
+        aborted = "Unknown"
     v = {
         "oom_observed": tri(s["oom_yes"] > 0),
-        "corruption_observed": tri(s["corruption_yes"] > 0),
-        "worker_aborted": "Yes" if s["worker_aborts"] > 0 else "No",
+        "corruption_observed": corruption,
+        "worker_aborted": aborted,
         "patch_differential": diff,
         "detection_site_attribution": "Unknown",
         "creation_site_attribution": "Unknown",
@@ -253,8 +315,8 @@ def main():
             bits.append("")
         targets.append(bits[:5])
 
-    print("c_validate v2.1.0  %d targets x %d trials  %s"
-          % (len(targets), a.trials, now()))
+    print("c_validate v%s  %d targets x %d trials  %s"
+          % (VERSION, len(targets), a.trials, now()))
     results = []
     for nm, url, kind, cont, probe in targets:
         r = run_target(nm, url, kind, cont, probe, a.trials, a.evdir)
@@ -267,9 +329,10 @@ def main():
         v_hit = any(r["stats"]["corruption_yes"] > 0 for r in vuln)
         p_hit = any(r["stats"]["corruption_yes"] > 0 for r in patch)
         all_oom = all(r["stats"]["oom_yes"] > 0 for r in results)
-        if v_hit and not p_hit and all_oom:
+        blind = any(r["stats"]["corruption_unknown"] > 0 for r in results)
+        if v_hit and not p_hit and all_oom and not blind:
             diff = "Confirmed"
-        elif not v_hit and not p_hit:
+        elif not v_hit and not p_hit and not blind:
             diff = "Not observed"
     for r in results:
         r["verdict"] = verdict(r, diff, a.attr_art, a.creation_ev)
@@ -286,12 +349,25 @@ def main():
         if not r["evidence"] or r["evidence"]["bytes"] == 0:
             gate["pass"] = False
             gate["reasons"].append("%s: missing raw log evidence" % r["name"])
+        if r["stats"]["corruption_unknown"] > 0:
+            gate["pass"] = False
+            gate["reasons"].append("%s: log unreadable for %d trial(s), corruption unknown"
+                                   % (r["name"], r["stats"]["corruption_unknown"]))
     if diff != "Confirmed":
         gate["pass"] = False
         gate["reasons"].append("patch differential: %s" % diff)
 
     report = {
-        "tool": "c_validate v2.1.0",
+        "tool": "c_validate v%s" % VERSION,
+        "counting": {
+            "method": ("the container's whole log is counted before and after each "
+                       "trial, with no tail window; 'zend_mm_heap corrupted' lines and "
+                       "Apache exit notices are counted separately"),
+            "corruption": ("a trial is corruption-positive when a heap-corrupted line "
+                           "appears during it"),
+            "unknown": ("a trial whose log could not be read is null (unknown), never "
+                        "a negative"),
+        },
         "statistics": {
             "interval_method": "Wilson score interval, two-sided 95% (z=1.96)",
             "zero_event_bound": ("corruption_upper95_onesided = 1 - 0.05^(1/n) "
@@ -339,9 +415,11 @@ def main():
     for r in results:
         s = r["stats"]
         ci = s["corruption_ci95"]
-        print("%-10s %-9s %-9s %-9s [%.2f, %.2f]%s  %s"
+        known = s["trials"] - s["corruption_unknown"]
+        ci_text = "[%.2f, %.2f]" % (ci[0], ci[1]) if ci[0] is not None else "[unknown]"
+        print("%-10s %-9s %-9s %-9s %-22s %s"
               % (r["name"], r["kind"], "%d/%d" % (s["oom_yes"], s["trials"]),
-                 "%d/%d" % (s["corruption_yes"], s["trials"]), ci[0], ci[1], "",
+                 "%d/%d" % (s["corruption_yes"], known), ci_text,
                  (r["provenance"].get("php_version") or "?")[:26]))
     print("\npatch differential: %s" % diff)
     print("gate: %s" % ("PASS" if gate["pass"] else "FAIL " + "; ".join(gate["reasons"])))

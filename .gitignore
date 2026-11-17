@@ -4,3 +4,5 @@ __pycache__/
 venv/
 .DS_Store
 .local/
+# output of new validator runs; evidence/ and poc/*.json hold the archived October files
+runs/

@@ -1,0 +1,1179 @@
+{
+  "tool": "recount v1.0.0",
+  "source_report": {
+    "file": "c_validation.json",
+    "sha256": "5641aec17635f8f4c4e188e7317bc353967177ea59601ea78a033499c83c794d",
+    "tool": "c_validate v2.1.0",
+    "generated": "2026-10-22T21:20:05.180456Z"
+  },
+  "method": "Each trial is matched to the Apache exit notices logged between the previous trial's timestamp and its own; where the report recorded the worker's pid for the trial, the notice must also name that pid. A trial counts as heap corruption when a matched notice is directly preceded by the allocator's 'zend_mm_heap corrupted' line. Counted over the complete evidence log, not a tail.",
+  "targets": [
+    {
+      "name": "8.4.26",
+      "kind": "vulnerable",
+      "trials": 20,
+      "report": {
+        "oom": 20,
+        "corruption": 10,
+        "worker_aborts": 20
+      },
+      "evidence": {
+        "path": "evidence/8.4.26.log",
+        "found": true,
+        "sha256": "1a84750a9795729925bb152ade5118ad576ece14da5cd8fc8def0cc72aa73982",
+        "matches_report_hash": true,
+        "lines": 500,
+        "heap_lines_total": 87,
+        "exit_notices_total": 87,
+        "covers_run": true,
+        "access_log_utc_offsets": [
+          "+0000"
+        ]
+      },
+      "recount": {
+        "attribution": "worker pid",
+        "trials_with_exit_notice": 20,
+        "trials_with_heap_corruption": 20,
+        "exit_notices_in_run_window": 20,
+        "unattributed_notices": 0
+      },
+      "agrees_with_report": false,
+      "per_trial": [
+        {
+          "trial": 0,
+          "pid_before": 329,
+          "pid_after": 403,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:01.549439Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 1,
+          "pid_before": 403,
+          "pid_after": 404,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:10.561436Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 2,
+          "pid_before": 404,
+          "pid_after": 405,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:19.573712Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 3,
+          "pid_before": 405,
+          "pid_after": 406,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:28.587046Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 4,
+          "pid_before": 406,
+          "pid_after": 407,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:37.600115Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 5,
+          "pid_before": 407,
+          "pid_after": 408,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:46.612456Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 6,
+          "pid_before": 408,
+          "pid_after": 409,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:05:55.625971Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 7,
+          "pid_before": 409,
+          "pid_after": 410,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:04.638783Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 8,
+          "pid_before": 410,
+          "pid_after": 411,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:13.652804Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 9,
+          "pid_before": 411,
+          "pid_after": 412,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:22.666597Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 10,
+          "pid_before": 412,
+          "pid_after": 413,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:31.680117Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 11,
+          "pid_before": 413,
+          "pid_after": 414,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:40.695064Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 12,
+          "pid_before": 414,
+          "pid_after": 415,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:49.708811Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 13,
+          "pid_before": 415,
+          "pid_after": 416,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:06:58.722065Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 14,
+          "pid_before": 416,
+          "pid_after": 417,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:07.736307Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 15,
+          "pid_before": 417,
+          "pid_after": 418,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:16.748547Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 16,
+          "pid_before": 418,
+          "pid_after": 419,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:25.762910Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 17,
+          "pid_before": 419,
+          "pid_after": 420,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:34.776216Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 18,
+          "pid_before": 420,
+          "pid_after": 421,
+          "report_corruption": false,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:43.790988Z",
+          "signal": "Abort"
+        },
+        {
+          "trial": 19,
+          "pid_before": 421,
+          "pid_after": 422,
+          "report_corruption": true,
+          "exit_notices": 1,
+          "heap_corruption": true,
+          "notice_time": "2026-10-22T21:07:52.803705Z",
+          "signal": "Abort"
+        }
+      ]
+    },
+    {
+      "name": "8.4.27",
+      "kind": "patched",
+      "trials": 20,
+      "report": {
+        "oom": 20,
+        "corruption": 0,
+        "worker_aborts": 0
+      },
+      "evidence": {
+        "path": "evidence/8.4.27.log",
+        "found": true,
+        "sha256": "b5af008f4b79f7a4dbc65d36d910ae2f53fc8f780010fc77e46db2cd4f0d9385",
+        "matches_report_hash": true,
+        "lines": 260,
+        "heap_lines_total": 0,
+        "exit_notices_total": 0,
+        "covers_run": true,
+        "access_log_utc_offsets": [
+          "+0000"
+        ]
+      },
+      "recount": {
+        "attribution": "worker pid",
+        "trials_with_exit_notice": 0,
+        "trials_with_heap_corruption": 0,
+        "exit_notices_in_run_window": 0,
+        "unattributed_notices": 0
+      },
+      "agrees_with_report": true,
+      "per_trial": [
+        {
+          "trial": 0,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 1,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 2,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 3,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 4,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 5,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 6,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 7,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 8,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 9,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 10,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 11,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 12,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 13,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 14,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 15,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 16,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 17,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 18,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 19,
+          "pid_before": 17,
+          "pid_after": 17,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        }
+      ]
+    },
+    {
+      "name": "8.2.35",
+      "kind": "patched",
+      "trials": 20,
+      "report": {
+        "oom": 20,
+        "corruption": 0,
+        "worker_aborts": 0
+      },
+      "evidence": {
+        "path": "evidence/8.2.35.log",
+        "found": true,
+        "sha256": "af4401228efa54c3674e0bc25747761278f374322d5f4b99c7878b1fea8db476",
+        "matches_report_hash": true,
+        "lines": 143,
+        "heap_lines_total": 0,
+        "exit_notices_total": 0,
+        "covers_run": true,
+        "access_log_utc_offsets": [
+          "+0000"
+        ]
+      },
+      "recount": {
+        "attribution": "time window",
+        "trials_with_exit_notice": 0,
+        "trials_with_heap_corruption": 0,
+        "exit_notices_in_run_window": 0,
+        "unattributed_notices": 0
+      },
+      "agrees_with_report": true,
+      "per_trial": [
+        {
+          "trial": 0,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 1,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 2,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 3,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 4,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 5,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 6,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 7,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 8,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 9,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 10,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 11,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 12,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 13,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 14,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 15,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 16,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 17,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 18,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 19,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        }
+      ]
+    },
+    {
+      "name": "8.3.36",
+      "kind": "patched",
+      "trials": 20,
+      "report": {
+        "oom": 20,
+        "corruption": 0,
+        "worker_aborts": 0
+      },
+      "evidence": {
+        "path": "evidence/8.3.36.log",
+        "found": true,
+        "sha256": "3bfd6af2c06873403ae84e30dc1e0222cbb2ce721a22c72b51fa4dc038bca1fc",
+        "matches_report_hash": true,
+        "lines": 143,
+        "heap_lines_total": 0,
+        "exit_notices_total": 0,
+        "covers_run": true,
+        "access_log_utc_offsets": [
+          "+0000"
+        ]
+      },
+      "recount": {
+        "attribution": "time window",
+        "trials_with_exit_notice": 0,
+        "trials_with_heap_corruption": 0,
+        "exit_notices_in_run_window": 0,
+        "unattributed_notices": 0
+      },
+      "agrees_with_report": true,
+      "per_trial": [
+        {
+          "trial": 0,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 1,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 2,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 3,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 4,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 5,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 6,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 7,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 8,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 9,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 10,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 11,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 12,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 13,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 14,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 15,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 16,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 17,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 18,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 19,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        }
+      ]
+    },
+    {
+      "name": "8.5.12",
+      "kind": "patched",
+      "trials": 20,
+      "report": {
+        "oom": 20,
+        "corruption": 0,
+        "worker_aborts": 0
+      },
+      "evidence": {
+        "path": "evidence/8.5.12.log",
+        "found": true,
+        "sha256": "586bc233ad20dee5ee22595a9b3e67de14d9b9fdf170c36aba5d7852edf57446",
+        "matches_report_hash": true,
+        "lines": 143,
+        "heap_lines_total": 0,
+        "exit_notices_total": 0,
+        "covers_run": true,
+        "access_log_utc_offsets": [
+          "+0000"
+        ]
+      },
+      "recount": {
+        "attribution": "time window",
+        "trials_with_exit_notice": 0,
+        "trials_with_heap_corruption": 0,
+        "exit_notices_in_run_window": 0,
+        "unattributed_notices": 0
+      },
+      "agrees_with_report": true,
+      "per_trial": [
+        {
+          "trial": 0,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 1,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 2,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 3,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 4,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 5,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 6,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 7,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 8,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 9,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 10,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 11,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 12,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 13,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 14,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 15,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 16,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 17,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 18,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        },
+        {
+          "trial": 19,
+          "pid_before": null,
+          "pid_after": null,
+          "report_corruption": false,
+          "exit_notices": 0,
+          "heap_corruption": false,
+          "notice_time": null,
+          "signal": null
+        }
+      ]
+    }
+  ],
+  "agrees_with_report": false,
+  "problems": []
+}

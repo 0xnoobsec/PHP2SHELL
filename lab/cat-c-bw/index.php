@@ -1,17 +1,21 @@
 <?php
+// Landing page for the Category C containers. Descriptive text only.
 echo "<html><head><title>Cat-C Lab</title></head><body>";
-echo "<h1>Category C - UAF via VAR_ENTRIES_MAX Overflow</h1>";
+echo "<h1>Category C - memory behaviour lab</h1>";
 echo "<p>PHP " . phpversion() . "</p>";
-echo "<p>CVE-2026-109618: Use-after-free in ext/standard/var_unserializer.re</p>";
+echo "<p>Memory limit: " . ini_get('memory_limit') . "</p>";
 echo "<ul>";
-echo "<li><a href='/decode.php'>/decode.php</a> — Trigger unserialize() with crafted payload</li>";
-echo "<li><a href='/info.php'>phpinfo()</a></li>";
+echo "<li><a href='/decode.php'>/decode.php</a> - the endpoint the harness posts to</li>";
+if (file_exists(__DIR__ . '/info.php')) {
+    echo "<li><a href='/info.php'>phpinfo()</a></li>";
+}
 echo "</ul>";
-echo "<h2>Attack Vector</h2>";
-echo "<p>Send a serialized payload with &gt;1018 back-references (R:N;) to overflow ";
-echo "the VAR_ENTRIES_MAX limit. The overflow causes freed zval pointers to be reused, ";
-echo "enabling heap corruption and potential code execution.</p>";
-echo "<h2>Heap Spray</h2>";
-echo "<p>Memory limit: " . ini_get('memory_limit') . " (high for spray room)</p>";
-echo "<p>The PoC sprays ~50 stdClass objects to fill freed slots with controlled data.</p>";
+echo "<h2>What is tested here</h2>";
+echo "<p>CVE-2026-109618 and CVE-2026-109619: a multipart request that runs PHP out of ";
+echo "memory while it is still parsing, followed by a request that carries only the ";
+echo "upload-progress field. On PHP 8.4.26 the worker then aborts with ";
+echo "<code>zend_mm_heap corrupted</code>. On the patched releases it does not.</p>";
+echo "<p>The harness also sends an unserialize() payload with many back-references. ";
+echo "That is a detection probe: on the builds tested it decodes without corruption.</p>";
+echo "<p>No code execution through memory corruption has been demonstrated with this lab.</p>";
 echo "</body></html>";

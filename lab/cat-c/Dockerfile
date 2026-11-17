@@ -1,7 +1,8 @@
 FROM php:8.1-apache
 
-# Category C lab: UAF via VAR_ENTRIES_MAX overflow in unserialize()
-# CVE-2026-109618: back-reference overflow past 1018 entries triggers use-after-free
+# Category C baseline: an unserialize() endpoint for the back-reference probe.
+# Detection only: on this build the probe decodes without corruption. This is
+# not CVE-2026-109618; that study runs against lab/cat-c-vuln.
 
 RUN a2enmod rewrite
 

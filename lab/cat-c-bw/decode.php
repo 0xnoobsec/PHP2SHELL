@@ -1,8 +1,18 @@
 <?php
 // Category C lab: DECODE endpoint
-// Triggers unserialize() on attacker-controlled data
-// CVE-2026-109618: >1018 back-references overflow VAR_ENTRIES_MAX
-// causing use-after-free in var_unserializer.re
+// Calls unserialize() on request data, and starts a session on file uploads.
+//
+// Two different things are tested against this file:
+//   * the back-reference probe: one payload with many R: references. On the
+//     builds tested it decodes without corruption. It is a detection probe,
+//     and it is not CVE-2026-109618.
+//   * the CVE-2026-109618 study in lab/cat-c-vuln: a multipart request that
+//     runs PHP out of memory while it is still parsing. That happens before
+//     this script starts, so nothing below is the vulnerable code.
+//
+// The text this script prints still uses the early "UAF trigger" wording. It
+// is left byte-for-byte as it was so that response sizes stay comparable with
+// the archived logs in evidence/. Read it as a label, not as a finding.
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -19,8 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['payload'])) {
     echo "[*] Calling unserialize()...\n";
     flush();
 
-    // This is the vulnerable call - with >1018 R: back-references,
-    // the var_entries array overflows and freed pointers are reused
+    // The probe target. VAR_ENTRIES_MAX (1018) is the size of one block in the
+    // unserializer's reference table; more references allocate another block.
+    // No corruption was observed from this call on the builds tested.
     $before_mem = memory_get_usage(true);
     $result = @unserialize($payload);
     $after_mem = memory_get_usage(true);

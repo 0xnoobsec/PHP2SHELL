@@ -4,9 +4,11 @@
 // Writes session data that the /fire endpoint will deserialize with the php handler
 // The handler mismatch allows injecting arbitrary serialized objects
 
-// php_serialize writes: key|s:N:"value";
-// When php handler reads this, the pipe in the VALUE is treated as a key/value delimiter
-// allowing injection of arbitrary serialized objects
+// php_serialize stores the whole session as one serialized array:
+//     a:1:{s:4:"data";s:N:"<value>";}
+// The php handler expects  key|<serialized value>  instead. Reading the file
+// above, it splits at the first pipe, which may sit inside <value>, and passes
+// what follows to unserialize().
 
 session_start();
 
