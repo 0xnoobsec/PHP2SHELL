@@ -1,4 +1,5 @@
+# Keep LF so hashes and shell scripts survive a Windows checkout.
+* text=auto eol=lf
 evidence/** -text
 poc/*.json -text
 poc/ARTIFACTS.sha256 -text
-poc/archive/** -text
