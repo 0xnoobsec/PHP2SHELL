@@ -2,11 +2,11 @@
 
 This repository contains the lab setup, proof-of-concept code, test harness, and logs from my investigation of PHP2Shell (CVE-2026-109618 and CVE-2026-109619).
 
-I also tested two application-level session attack patterns that remain possible on patched PHP versions.
+The lab also holds two application-level session flaws, Categories A and B. They are not part of PHP2Shell: both worked on patched PHP, because the flaw is in the application. They are covered [in their own section below](#categories-a-and-b-not-php2shell) and in a separate article.
 
 **This repository contains working exploitation code.** All testing was performed in an isolated lab environment. Read [SECURITY.md](SECURITY.md) before running anything.
 
-> **Correction, 18 November 2026.** Earlier versions of this README, and the validation report, said PHP 8.4.26 showed allocator corruption in 10 of 20 trials. That was a counting error in the validator. The raw log shows the worker aborting with `zend_mm_heap corrupted` in all 20. The details, and seven smaller corrections, are in [ERRATA.md](ERRATA.md).
+> **Correction, 18 November 2026.** Earlier versions of this README, and the validation report, said PHP 8.4.26 showed allocator corruption in 10 of 20 trials. That was a counting error in the validator. The raw log shows the worker aborting with `zend_mm_heap corrupted` in all 20. The details, and the other corrections, are in [ERRATA.md](ERRATA.md).
 
 ## Write-up
 
@@ -15,6 +15,8 @@ I've documented the research in a three-part series on **[cybersecly.com](https:
 1. **[Part 1: Internals and sessions](https://cybersecly.com/resources/php2shell-part-1-internals-and-sessions).** PHP request lifecycle, sessions, memory management, and OOM handling.
 2. **[Part 2: Source analysis and patches](https://cybersecly.com/resources/php2shell-part-2-source-analysis-and-patches).** Comparing PHP 8.4.26 and 8.4.27 to understand the changes.
 3. **[Part 3: Reproduction and results](https://cybersecly.com/resources/php2shell-part-3-reproduction-and-results).** Lab setup, test results, GDB analysis, and lessons from failed attempts, including the counting error behind the correction above.
+
+The two application-level session flaws, which are not part of PHP2Shell, have a separate article: **[Two session flaws a PHP update does not fix](https://cybersecly.com/resources/php-session-flaws-patching-does-not-fix)**.
 
 This repository contains the code and supporting evidence discussed in the articles.
 
@@ -37,8 +39,6 @@ The results reflect the conditions of my lab. 20/20 is what one sequence of requ
 
 8.4.26 and 8.4.27 were run again with the fixed validator on 17 and 18 November 2026, and both runs gave the same result: corruption and a worker abort in 20 of 20 trials on 8.4.26, none in 20 on 8.4.27. The reports and logs are in `evidence/replication-2026-11-17/` and `evidence/replication-2026-11-18/` ([ERRATA.md](ERRATA.md), items 9 and 10). The other three builds were not run again.
 
-The two application-level chains (Categories A and B) ended in command execution inside the lab's deliberately vulnerable apps. On 18 November both were run again against PHP 8.4.27, the patched release, and both ended in command execution as `www-data`; the output and logs are in `evidence/replication-2026-11-18/`. My earlier runs on PHP 7.4.33 and 8.1.34 remain a lab record without logs.
-
 ### Check the numbers yourself
 
 You do not need Docker or the lab for this. It reads the published reports and the published raw logs:
@@ -51,6 +51,17 @@ python3 -m unittest discover -s poc/tests -v
 ```
 
 `recount.py` matches every trial to the Apache exit notices logged during it, and to the worker's pid where the report recorded one, and prints the report's count beside the raw log's count. The first command shows the October report's under-count of 8.4.26; the two replications agree with their reports. It exits 2, and says INCONCLUSIVE, when a log is missing or cannot support a verdict.
+
+## Categories A and B (not PHP2Shell)
+
+These two chains use PHP's session features, but the flaw is in the application. They are not CVE-2026-109618 or CVE-2026-109619. Early lab notes filed them under CVE-2026-109619, which was wrong ([ERRATA.md](ERRATA.md), item 4).
+
+- **Category A:** a page that includes a file named by the request, fed by session upload progress.
+- **Category B:** two parts of one application reading the same session files with different serialize handlers, plus a loaded gadget class.
+
+Both ended in command execution inside the lab's deliberately vulnerable apps. On 18 November both were run again against PHP 8.4.27, the patched release, and both ended in command execution as `www-data`; the output and logs are in `evidence/replication-2026-11-18/`. My earlier runs on PHP 7.4.33 and 8.1.34 remain a lab record without logs.
+
+How each one works, and how to fix it: **[Two session flaws a PHP update does not fix](https://cybersecly.com/resources/php-session-flaws-patching-does-not-fix)**.
 
 ## Repository structure
 
