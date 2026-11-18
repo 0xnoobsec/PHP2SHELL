@@ -252,7 +252,7 @@ agreement. That is the same class of mistake as the original counter, pointed
 the other way. It now prints INCONCLUSIVE, writes `agrees_with_report: null`,
 and exits 2. Evidence paths also resolve beside the report, so a lab that copied
 only `poc/` still works. A regression test covers the missing-log case.
-Fixed in 570cfaa.
+Fixed in 7894281.
 
 ### 10. A second replication, 18 November 2026
 
