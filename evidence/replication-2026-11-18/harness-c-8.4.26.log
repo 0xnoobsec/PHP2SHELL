@@ -1,0 +1,21 @@
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+[Wed Nov 18 16:17:21.668121 2026] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.69 (Debian) PHP/8.4.26 configured -- resuming normal operations
+[Wed Nov 18 16:17:21.668168 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'apache2 -D FOREGROUND'
+172.17.0.1 - - [18/Nov/2026:16:17:28 +0000] "GET /decode.php HTTP/1.1" 200 845 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:28.583517 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:45246] script '/var/www/html/info.php' not found or unable to stat
+172.17.0.1 - - [18/Nov/2026:16:17:28 +0000] "GET /info.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:28 +0000] "GET /phpinfo.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:28.584887 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:45246] script '/var/www/html/phpinfo.php' not found or unable to stat
+[Wed Nov 18 16:17:28.586032 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:45246] script '/var/www/html/php_info.php' not found or unable to stat
+172.17.0.1 - - [18/Nov/2026:16:17:28 +0000] "GET /php_info.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:28.675591 2026] [mpm_prefork:error] [pid 1:tid 1] AH00161: server reached MaxRequestWorkers setting, consider raising the MaxRequestWorkers setting
+172.17.0.1 - - [18/Nov/2026:16:17:28 +0000] "POST /decode.php HTTP/1.1" 200 420 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:17:29.676206 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 17 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:17:30 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:17:31.679474 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 18 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:17:32 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:17:33.682521 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 19 exit signal Abort (6), possible coredump in /etc/apache2

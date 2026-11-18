@@ -1,0 +1,42 @@
+{
+  "tool": "php2shell v17.0.0",
+  "target": "http://127.0.0.1:18096/",
+  "start": "2026-11-18T16:12:46.957142Z",
+  "findings": [
+    {
+      "tag": "php_version_patched",
+      "severity": "info",
+      "detail": "PHP 8.4.27 at or above fixed",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:46.983431Z"
+    },
+    {
+      "tag": "session_save_path",
+      "severity": "info",
+      "detail": "save_path=/var/lib/php/sessions",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:47.002996Z"
+    },
+    {
+      "tag": "handler_mismatch",
+      "severity": "high",
+      "detail": "seed/fire desynchronise; destructor path reachable",
+      "evidence": "decode error on fire",
+      "ts": "2026-11-18T16:12:47.266652Z"
+    },
+    {
+      "tag": "category_b_rce",
+      "severity": "critical",
+      "detail": "POP gadget executed via handler mismatch (lab)",
+      "evidence": "\n[GADGET] __destruct fired: uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\n<br />\n<b>Warning</b>:  session_start(): Failed to decode session",
+      "ts": "2026-11-18T16:12:47.272515Z"
+    },
+    {
+      "tag": "method_B_data_gadget",
+      "severity": "critical",
+      "detail": "LANDED seed data= gadget",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:47.272552Z"
+    }
+  ]
+}

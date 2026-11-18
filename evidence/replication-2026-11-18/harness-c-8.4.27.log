@@ -1,0 +1,18 @@
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.3. Set the 'ServerName' directive globally to suppress this message
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.3. Set the 'ServerName' directive globally to suppress this message
+[Wed Nov 18 16:17:23.478975 2026] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.69 (Debian) PHP/8.4.27 configured -- resuming normal operations
+[Wed Nov 18 16:17:23.479020 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'apache2 -D FOREGROUND'
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "GET /decode.php HTTP/1.1" 200 846 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:34.180566 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:34802] script '/var/www/html/info.php' not found or unable to stat
+[Wed Nov 18 16:17:34.181726 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:34802] script '/var/www/html/phpinfo.php' not found or unable to stat
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "GET /info.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "GET /phpinfo.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:34.182973 2026] [php:error] [pid 17:tid 17] [client 172.17.0.1:34802] script '/var/www/html/php_info.php' not found or unable to stat
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "GET /php_info.php HTTP/1.1" 404 530 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 909 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 909 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:17:34.492172 2026] [mpm_prefork:error] [pid 1:tid 1] AH00161: server reached MaxRequestWorkers setting, consider raising the MaxRequestWorkers setting
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:17:34 +0000] "POST /decode.php HTTP/1.1" 200 909 "-" "python-requests/2.32.3"

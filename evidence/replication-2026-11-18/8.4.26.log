@@ -1,0 +1,106 @@
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+[Wed Nov 18 16:07:01.734344 2026] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.69 (Debian) PHP/8.4.26 configured -- resuming normal operations
+[Wed Nov 18 16:07:01.734384 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'apache2 -D FOREGROUND'
+172.17.0.1 - - [18/Nov/2026:16:07:12 +0000] "GET /probe.php HTTP/1.1" 200 236 "-" "curl/8.14.1"
+172.17.0.1 - - [18/Nov/2026:16:07:13 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+[Wed Nov 18 16:07:13.747321 2026] [mpm_prefork:error] [pid 1:tid 1] AH00161: server reached MaxRequestWorkers setting, consider raising the MaxRequestWorkers setting
+172.17.0.1 - - [18/Nov/2026:16:07:13 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:07:21.757341 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 17 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:07:22 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:23 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:23 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:07:30.769196 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 91 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:07:31 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:32 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:32 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:07:39.782138 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 92 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:07:40 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:41 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:41 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:07:48.795545 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 93 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:07:49 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:50 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:50 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:07:57.809324 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 94 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:07:58 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:59 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:07:59 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:06.822692 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 95 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:07 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:08 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:08 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:15.835806 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 96 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:16 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:17 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:17 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:24.850200 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 97 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:25 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:26 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:26 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:33.863514 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 98 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:34 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:35 +0000] "GET /probe.php HTTP/1.1" 200 292 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:35 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:42.875995 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 99 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:43 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:44 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:44 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:08:51.887143 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 100 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:08:52 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:53 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:08:53 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:00.898521 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 101 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:01 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:02 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:02 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:09.909788 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 102 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:10 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:11 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:11 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:18.920827 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 103 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:19 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:20 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:20 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:27.933381 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 104 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:28 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:29 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:29 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:36.948119 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 105 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:37 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:38 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:38 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:45.960595 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 106 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:46 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:47 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:47 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:09:54.973074 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 107 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:09:55 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:56 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:09:56 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:10:03.985448 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 108 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:10:04 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:10:05 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"
+172.17.0.1 - - [18/Nov/2026:16:10:05 +0000] "POST /decode.php HTTP/1.1" 200 421 "-" "python-requests/2.32.3"
+zend_mm_heap corrupted
+[Wed Nov 18 16:10:12.998228 2026] [core:notice] [pid 1:tid 1] AH00051: child pid 109 exit signal Abort (6), possible coredump in /etc/apache2
+172.17.0.1 - - [18/Nov/2026:16:10:14 +0000] "GET /probe.php HTTP/1.1" 200 293 "-" "python-requests/2.32.3"

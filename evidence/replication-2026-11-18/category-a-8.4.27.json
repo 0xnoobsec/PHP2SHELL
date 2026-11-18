@@ -1,0 +1,35 @@
+{
+  "tool": "php2shell v17.0.0",
+  "target": "http://127.0.0.1:18093/index.php",
+  "start": "2026-11-18T16:12:45.734078Z",
+  "findings": [
+    {
+      "tag": "php_version_patched",
+      "severity": "info",
+      "detail": "PHP 8.4.27 at or above fixed",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:45.739149Z"
+    },
+    {
+      "tag": "session_save_path",
+      "severity": "info",
+      "detail": "save_path=/var/lib/php/sessions",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:45.758715Z"
+    },
+    {
+      "tag": "category_a_rce",
+      "severity": "critical",
+      "detail": "LFI race -> command execution via /var/lib/php/sessions",
+      "evidence": "s\";a:1:{i:0;a:7:{s:10:\"field_name\";s:1:\"f\";s:4:\"name\";s:24:\"uid=33(www-data) gid=33(www-data) groups=33(www-data)\n\";s:8:\"tmp_name\";N;s:5:\"error\";i:0;s:4:\"done\";b:0;s:10:\"start_time\";i:1795018365;s:15:",
+      "ts": "2026-11-18T16:12:46.751193Z"
+    },
+    {
+      "tag": "method_A_session_race",
+      "severity": "critical",
+      "detail": "LANDED session-file LFI race",
+      "evidence": "",
+      "ts": "2026-11-18T16:12:46.751232Z"
+    }
+  ]
+}

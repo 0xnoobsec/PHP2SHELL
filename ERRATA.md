@@ -229,6 +229,9 @@ No raw logs of those runs were kept, so this repository holds no evidence for
 them beyond that record. The compose file builds both apps on PHP 8.1 by
 default, which is end-of-life and never received the October 2026 fixes.
 
+Superseded for PHP 8.4.27 by item 11: both chains were run again on
+18 November and their logs are in `evidence/replication-2026-11-18/`.
+
 ### 9. Replication run, and a fail-open bug in recount.py
 
 Two things, dated 17-18 November 2026.
@@ -250,3 +253,82 @@ the other way. It now prints INCONCLUSIVE, writes `agrees_with_report: null`,
 and exits 2. Evidence paths also resolve beside the report, so a lab that copied
 only `poc/` still works. A regression test covers the missing-log case.
 Fixed in 570cfaa.
+
+### 10. A second replication, 18 November 2026
+
+The Category C study was run a third time, on the lab host, with
+`c_validate v2.2.0`, from 16:07 to 16:12 UTC. Same result: 20 of 20 trials on
+8.4.26 ended in `zend_mm_heap corrupted` and a worker abort, each matched to
+that trial's worker, and 0 of 20 on 8.4.27. Gate PASS, differential Confirmed.
+The logs and the report are in `evidence/replication-2026-11-18/`:
+
+```bash
+python3 poc/recount.py --report evidence/replication-2026-11-18/REPORT.json --root . --strict
+```
+
+Only 8.4.26 and 8.4.27 have been run again. The figures for 8.2.35, 8.3.36 and
+8.5.12 still rest on the October logs.
+
+A correction to item 9: the 8.4.27 image in both replications is the October
+build (image digest `sha256:2947903cb4ff...`, the same as in
+`poc/c_validation.json`), not a rebuild. It has no `probe.php`, so its worker
+pid was not tracked and its trials are matched by time. The 8.4.26 image was
+rebuilt from `lab/cat-c-vuln`.
+
+Both replication reports keep the validator's absolute path on the lab host,
+which includes the lab account's home directory.
+
+### 11. Categories A and B on PHP 8.4.27, now with logs
+
+Item 8 said no raw logs were kept for the application-level chains. On
+18 November both were run again against PHP 8.4.27, the patched release, from
+the `p2s-a84` and `p2s-b84` images:
+
+* Category A (include sink plus upload progress) ended in command execution as
+  `www-data` through the session-file race;
+* Category B (serialize-handler mismatch) ran the lab gadget's destructor as
+  `www-data`, in the same response as the "Failed to decode session" warning.
+
+The harness output and both containers' logs are in
+`evidence/replication-2026-11-18/`. The earlier runs on PHP 7.4.33 and 8.1.34
+remain a lab record without logs.
+
+### 12. php2shell.py could not trigger the Category C corruption
+
+`c_heap_corrupt` sent request A and request B without a session cookie.
+`c_validate.py`, `c_minimize.py` and `debug/trigger_oom.py` all send one. Without
+a session id the upload-progress callback never starts the session while PHP is
+parsing, so the path the advisory describes is never taken.
+
+On the lab, against PHP 8.4.26, the method reached the out-of-memory error in
+every round and no worker aborted. The old version hid this: it counted the
+out-of-memory error, or any old corruption line in the log, as a success
+(item 3).
+
+The method now sends a fresh `PHPSESSID` with each round, shared by A and B,
+as the validator does. Run again on the lab, it confirmed corruption in 3 of 3
+rounds on 8.4.26, from new log lines only, and none on 8.4.27
+(`evidence/replication-2026-11-18/harness-c-*.log`).
+
+This changes what the harness sends: each Category C request now carries a
+cookie. Item 3 said no request was changed; that held until this fix.
+
+### 13. recount.py: three more ways to report "agrees" without the evidence for it
+
+* **Start-up lines were ignored.** The check that a log spans its run used only
+  request lines and abort notices. A log captured from a fresh container, whose
+  first request is the run's own, looked as if it began after the run started,
+  although it begins with Apache's start-up notice minutes earlier. Error-log
+  lines now count. Found on the 18 November run.
+* **Evidence that exists but cannot support a verdict** (a log that is not the
+  file the report hashed, does not span the run, has no timestamps, or is in
+  another time zone) used to end in "The recount agrees with the report" and
+  exit 0, with only a note. It is now INCONCLUSIVE and exits 2, like a missing
+  log (item 9). When one target disagrees and another has no usable evidence,
+  both are reported.
+* **Two candidate logs.** When the same relative path existed under the root
+  and next to the report, the root's copy was read even if it was another run's
+  log. The file whose SHA-256 matches the report is now chosen.
+
+The recount of the October report is unchanged, byte for byte. The tests pass
+in the published layout and in a lab that keeps the logs in `poc/evidence/`.

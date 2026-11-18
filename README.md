@@ -35,18 +35,22 @@ Five builds, 20 trials each, one configuration: Apache with mod_php, prefork, a 
 
 The results reflect the conditions of my lab. 20/20 is what one sequence of requests, at one size, did in one configuration, with the trials run one after another against the same container. It is not an exploitation probability. Elsewhere in the same log, two rounds of five trials ended with an abort in only 2 and 3 of them (see [ERRATA.md](ERRATA.md), item 2). Similarly, 0/20 does not mean corruption is impossible on patched builds: it means none was observed, and the logs of the four patched containers contain no abort at all.
 
-The two application-level chains (Categories A and B) ended in command execution inside the lab's deliberately vulnerable apps. My lab record has them working on PHP 7.4.33, 8.1.34 and 8.4.27. I did not keep raw logs of those runs, so this repository holds no evidence for them beyond that record.
+8.4.26 and 8.4.27 were run again with the fixed validator on 17 and 18 November 2026, and both runs gave the same result: corruption and a worker abort in 20 of 20 trials on 8.4.26, none in 20 on 8.4.27. The reports and logs are in `evidence/replication-2026-11-17/` and `evidence/replication-2026-11-18/` ([ERRATA.md](ERRATA.md), items 9 and 10). The other three builds were not run again.
+
+The two application-level chains (Categories A and B) ended in command execution inside the lab's deliberately vulnerable apps. On 18 November both were run again against PHP 8.4.27, the patched release, and both ended in command execution as `www-data`; the output and logs are in `evidence/replication-2026-11-18/`. My earlier runs on PHP 7.4.33 and 8.1.34 remain a lab record without logs.
 
 ### Check the numbers yourself
 
-You do not need Docker or the lab for this. It reads the published report and the published raw logs:
+You do not need Docker or the lab for this. It reads the published reports and the published raw logs:
 
 ```bash
 python3 poc/recount.py
+python3 poc/recount.py --report evidence/replication-2026-11-17/REPORT.json --root .
+python3 poc/recount.py --report evidence/replication-2026-11-18/REPORT.json --root .
 python3 -m unittest discover -s poc/tests -v
 ```
 
-`recount.py` matches every trial to the Apache exit notices logged during it, and to the worker's pid where the report recorded one, and prints the report's count beside the raw log's count.
+`recount.py` matches every trial to the Apache exit notices logged during it, and to the worker's pid where the report recorded one, and prints the report's count beside the raw log's count. The first command shows the October report's under-count of 8.4.26; the two replications agree with their reports. It exits 2, and says INCONCLUSIVE, when a log is missing or cannot support a verdict.
 
 ## Repository structure
 
