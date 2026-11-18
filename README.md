@@ -1,6 +1,8 @@
-# php2shell - PHP2Shell Research Lab
+# php2shell-lab - PHP2Shell research lab
 
 This repository contains the lab setup, proof-of-concept code, test harness, and logs from my investigation of PHP2Shell (CVE-2026-109618 and CVE-2026-109619).
+
+The name PHP2Shell comes from [Calif's research](https://calif.io/php2shell/) into these two bugs, which this study follows. This repository is an independent lab study, not Calif's code.
 
 The lab also holds two application-level session flaws, Categories A and B. They are not part of PHP2Shell: both worked on patched PHP, because the flaw is in the application. They are covered [in their own section below](#categories-a-and-b-not-php2shell) and in a separate article.
 

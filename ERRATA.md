@@ -197,12 +197,12 @@ line:
 | `/tmp/cv3_report.json` `8344a6d9...` | The report as first written. The published `poc/c_validation.json` has SHA-256 `5641aec1...` in every commit of this repository, so it is not byte-identical to that original. What differs was not recorded. |
 | `c_validate.py` `15a4c5b1...` | Now `poc/archive/c_validate_v2.1.0.py`, unmodified. |
 | `c_cases.json`, `ci_validate.sh` | Unchanged; they match. |
-| `PATCH_MAP.md` `463c1657...` | Removed from this repository on 9 November 2026 with the write-up drafts. It is in the history: [docs/PATCH_MAP.md at 0f6d5d6](https://github.com/Cybersecly-LLC/PHP2SHELL/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/PATCH_MAP.md). |
+| `PATCH_MAP.md` `463c1657...` | Removed from this repository on 9 November 2026 with the write-up drafts. It is in the history: [docs/PATCH_MAP.md at 0f6d5d6](https://github.com/Cybersecly-LLC/php2shell-lab/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/PATCH_MAP.md). |
 | `evidence/*.log` (five files) | Unchanged; they match. |
 
 The report's attribution block also cites `C_ATTRIBUTION.md`, removed at the
 same time:
-[docs/C_ATTRIBUTION.md at 0f6d5d6](https://github.com/Cybersecly-LLC/PHP2SHELL/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/C_ATTRIBUTION.md).
+[docs/C_ATTRIBUTION.md at 0f6d5d6](https://github.com/Cybersecly-LLC/php2shell-lab/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/C_ATTRIBUTION.md).
 
 Both notes carry the superseded 10 of 20 figure. `C_ATTRIBUTION.md` also reports
 "9 worker aborts" in five trials, which is the two-lines-per-abort count
@@ -224,7 +224,7 @@ The README says the two application-level chains remain possible on patched
 PHP. The lab record behind that is command execution on PHP 7.4.33, 8.1.34 and
 8.4.27, using images built from `lab/cat-a` and `lab/cat-b` with a
 `PHP_VERSION` build argument
-([docs/CAPABILITIES.md at 0f6d5d6](https://github.com/Cybersecly-LLC/PHP2SHELL/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/CAPABILITIES.md)).
+([docs/CAPABILITIES.md at 0f6d5d6](https://github.com/Cybersecly-LLC/php2shell-lab/blob/0f6d5d6b773c2bb4af5c6060bbeef97ab0b8a876/docs/CAPABILITIES.md)).
 No raw logs of those runs were kept, so this repository holds no evidence for
 them beyond that record. The compose file builds both apps on PHP 8.1 by
 default, which is end-of-life and never received the October 2026 fixes.
