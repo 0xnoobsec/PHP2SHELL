@@ -50,9 +50,11 @@ class FakeSession:
     def __init__(self, oom=True):
         self.oom = oom
         self.posts = 0
+        self.session_ids = []  # the PHPSESSID cookie sent with each POST, or None
 
     def post(self, url, data=None, headers=None, timeout=None, **kwargs):
         self.posts += 1
+        self.session_ids.append((kwargs.get("cookies") or {}).get("PHPSESSID"))
         if data is not None and not isinstance(data, (bytes, str)):
             b"".join(data)  # drain the chunked body like a real client would
         is_request_a = self.posts % 2 == 1
@@ -145,6 +147,17 @@ class HeapCorruptReporting(unittest.TestCase):
         outcome, _reached, result = run_chain(php2shell, FakeSession(oom=True), ["", notice])
         self.assertIs(outcome, False)
         self.assertIsNone(finding(result, "heap_corruption_confirmed"))
+
+    def test_each_round_sends_one_session_id_with_both_requests(self):
+        # Without a session id the upload-progress callback never starts the
+        # session during parsing, and the trigger only reaches the memory limit.
+        session = FakeSession(oom=True)
+        run_chain(php2shell, session, None)
+        ids = session.session_ids
+        self.assertEqual(len(ids), 6)                       # three rounds of A then B
+        self.assertTrue(all(ids), ids)                      # every request carries one
+        self.assertEqual(ids[0::2], ids[1::2])              # A and B share it
+        self.assertEqual(len(set(ids[0::2])), 3)            # a new one each round
 
     def test_the_phrase_inside_a_request_line_is_not_corruption(self):
         request = '10.0.0.1 - - [x] "GET /?q=1 HTTP/1.1" 200 5 "-" "zend_mm_heap corrupted"'

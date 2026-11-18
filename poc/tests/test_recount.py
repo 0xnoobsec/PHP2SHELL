@@ -17,7 +17,15 @@ POC = os.path.join(HERE, "..")
 ROOT = os.path.join(POC, "..")
 sys.path.insert(0, POC)
 
-from recount import recount_target, trial_windows  # noqa: E402
+from recount import recount_target, resolve_evidence, trial_windows  # noqa: E402
+
+# The published layout keeps the logs in <repo>/evidence/. A lab that copied only
+# poc/ keeps them in poc/evidence/. resolve_evidence() accepts both, so these
+# tests run in either layout.
+with open(os.path.join(POC, "c_validation.json"), "rb") as _handle:
+    _REPORT_8426 = next(t for t in json.loads(_handle.read())["targets"] if t["name"] == "8.4.26")
+LOG_8426 = resolve_evidence(ROOT, _REPORT_8426["evidence"]["path"], POC,
+                            _REPORT_8426["evidence"]["sha256"])
 
 
 def load_report():
@@ -29,7 +37,7 @@ class PublishedRun(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.report = load_report()
-        cls.targets = {t["name"]: recount_target(t, ROOT) for t in cls.report["targets"]}
+        cls.targets = {t["name"]: recount_target(t, ROOT, POC) for t in cls.report["targets"]}
 
     def test_every_evidence_log_matches_the_hash_in_the_report(self):
         for name, target in self.targets.items():
@@ -96,7 +104,7 @@ class WholeCapturedLog(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         import re
-        with open(os.path.join(ROOT, "evidence", "8.4.26.log"), encoding="utf-8") as handle:
+        with open(LOG_8426, encoding="utf-8") as handle:
             lines = handle.read().splitlines()
         post = re.compile(r'\[\d+/\w+/\d+:(\d\d:\d\d:\d\d) \+0000\] "POST /decode\.php [^"]+" 200 (\d+)')
         found = [(i, m.group(1), int(m.group(2))) for i, line in enumerate(lines)
@@ -254,6 +262,132 @@ class CommandLine(unittest.TestCase):
             self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
             self.assertIn("INCONCLUSIVE", proc.stdout)
             self.assertNotIn("The recount agrees", proc.stdout)
+
+
+class FailsClosed(unittest.TestCase):
+    """Evidence that exists but cannot support a verdict is not agreement either."""
+
+    # Three clean trials, nine seconds apart; the run starts about 21:04:56.
+    RECORDS = [record(0, "21:05:09"), record(1, "21:05:18"), record(2, "21:05:27")]
+    COMPLETE = [ACCESS % "21:04:50", ACCESS % "21:05:09", ACCESS % "21:05:18",
+                ACCESS % "21:05:28"]
+
+    def run_tool(self, targets, logs, *extra):
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for rel, (lines, hash_is_right) in logs.items():
+                data = ("\n".join(lines) + "\n").encode("utf-8")
+                os.makedirs(os.path.join(tmp, os.path.dirname(rel)), exist_ok=True)
+                with open(os.path.join(tmp, rel), "wb") as handle:
+                    handle.write(data)
+                for target in targets:
+                    if target["evidence"]["path"] == rel:
+                        target["evidence"]["sha256"] = (
+                            hashlib.sha256(data).hexdigest() if hash_is_right else "0" * 64)
+            report = os.path.join(tmp, "c_validation.json")
+            out = os.path.join(tmp, "recount.json")
+            with open(report, "w", encoding="utf-8") as handle:
+                json.dump({"tool": "test", "generated": "x", "targets": targets}, handle)
+            proc = subprocess.run(
+                [sys.executable, os.path.join(POC, "recount.py"), "--report", report,
+                 "--root", tmp, "--out", out, *extra],
+                capture_output=True, text=True)
+            with open(out, encoding="utf-8") as handle:
+                return proc, json.load(handle)
+
+    def target(self, name, path, records=None):
+        return {"name": name, "kind": "patched",
+                "records": [dict(r) for r in (records or self.RECORDS)],
+                "evidence": {"path": path, "sha256": ""}}
+
+    def assert_inconclusive(self, proc, result):
+        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+        self.assertIn("INCONCLUSIVE", proc.stdout)
+        self.assertNotIn("The recount agrees", proc.stdout)
+        self.assertIsNone(result["agrees_with_report"])
+
+    def test_complete_log_with_the_right_hash_agrees(self):
+        # the positive control for the cases below
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (self.COMPLETE, True)})
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertIn("The recount agrees with the report.", proc.stdout)
+        self.assertIs(result["agrees_with_report"], True)
+
+    def test_the_log_whose_hash_matches_wins_over_an_unrelated_one(self):
+        # A later run left its own evidence/ at the root, next to an older report
+        # kept with its logs (found while staging on the lab, 18 November 2026).
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            right = ("\n".join(self.COMPLETE) + "\n").encode()
+            wrong = b"an unrelated, later log\n"
+            for folder, data in ((tmp, wrong), (os.path.join(tmp, "poc"), right)):
+                os.makedirs(os.path.join(folder, "evidence"), exist_ok=True)
+                with open(os.path.join(folder, "evidence", "t.log"), "wb") as handle:
+                    handle.write(data)
+            chosen = resolve_evidence(tmp, "evidence/t.log", os.path.join(tmp, "poc"),
+                                      hashlib.sha256(right).hexdigest())
+            self.assertEqual(os.path.normpath(chosen), os.path.join(tmp, "poc", "evidence", "t.log"))
+            # without a matching file the root is still the default
+            fallback = resolve_evidence(tmp, "evidence/t.log", os.path.join(tmp, "poc"), "0" * 64)
+            self.assertEqual(os.path.normpath(fallback), os.path.join(tmp, "evidence", "t.log"))
+
+    def test_a_whole_container_log_covers_its_run(self):
+        # Starts with Apache's start-up notice; the first request is the run's own.
+        startup = ("[Thu Oct 22 21:04:30.000001 2026] [mpm_prefork:notice] [pid 1:tid 1] "
+                   "AH00163: Apache/2.4.69 (Debian) PHP/8.4.26 configured")
+        log = [startup, ACCESS % "21:05:00", ACCESS % "21:05:09", ACCESS % "21:05:18",
+               ACCESS % "21:05:28"]
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (log, True)})
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertNotIn("does not span", proc.stdout)
+        self.assertIs(result["agrees_with_report"], True)
+
+    def test_a_log_that_is_not_the_hashed_file_is_inconclusive(self):
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (self.COMPLETE, False)})
+        self.assert_inconclusive(proc, result)
+        self.assertIn("does not match the hash", proc.stdout)
+
+    def test_a_log_that_stops_before_the_last_trial_is_inconclusive(self):
+        partial = [ACCESS % "21:04:50", ACCESS % "21:05:09"]
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (partial, True)})
+        self.assert_inconclusive(proc, result)
+
+    def test_a_log_that_starts_after_the_run_began_is_inconclusive(self):
+        late = [ACCESS % "21:05:20", ACCESS % "21:05:28"]
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (late, True)})
+        self.assert_inconclusive(proc, result)
+
+    def test_a_log_without_timestamps_is_inconclusive(self):
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (["hello", "world"], True)})
+        self.assert_inconclusive(proc, result)
+
+    def test_a_log_in_another_time_zone_is_inconclusive(self):
+        shifted = [line.replace("+0000", "+0600") for line in self.COMPLETE]
+        proc, result = self.run_tool([self.target("t", "evidence/t.log")],
+                                     {"evidence/t.log": (shifted, True)})
+        self.assert_inconclusive(proc, result)
+        self.assertIn("not in UTC", proc.stdout)
+
+    def test_a_known_disagreement_is_reported_beside_a_missing_log(self):
+        aborting = [ACCESS % "21:04:50", HEAP, NOTICE % ("21:05:08", 40), ACCESS % "21:05:09",
+                    ACCESS % "21:05:18", ACCESS % "21:05:28"]
+        proc, result = self.run_tool(
+            [self.target("vuln", "evidence/v.log"), self.target("other", "evidence/absent.log")],
+            {"evidence/v.log": (aborting, True)})
+        self.assertEqual(proc.returncode, 2, proc.stdout)
+        self.assertIn("DISAGREES", proc.stdout)
+        self.assertIn("(vuln)", proc.stdout)
+        self.assertIn("INCONCLUSIVE for other", proc.stdout)
+        self.assertIs(result["agrees_with_report"], False)
 
 
 class TrialWindows(unittest.TestCase):

@@ -58,20 +58,25 @@ def trial_windows(times):
     return [(start, end + SLACK) for start, end in zip(starts, times)]
 
 
-def resolve_evidence(root, rel, report_dir=None):
+def resolve_evidence(root, rel, report_dir=None, sha256=None):
     """Find the evidence file, tolerating a report kept beside its own logs.
 
     The committed layout puts logs at <root>/evidence/. A lab that copied
-    only poc/ may keep them at <report_dir>/evidence/. Both are the same
-    files; preferring the root keeps the published layout authoritative.
+    only poc/ may keep them at <report_dir>/evidence/. When both exist they
+    need not be the same file (a later run can write its own evidence/ next to
+    an older report), so the one whose SHA-256 matches the report wins. Without
+    a match, the root is preferred and the hash check reports the mismatch.
     """
     candidates = [os.path.join(root, rel)]
     if report_dir:
         candidates.append(os.path.join(report_dir, rel))
-    for candidate in candidates:
-        if os.path.isfile(candidate):
-            return candidate
-    return candidates[0]
+    existing = [c for c in candidates if os.path.isfile(c)]
+    if sha256:
+        for candidate in existing:
+            with open(candidate, "rb") as handle:
+                if sha256_bytes(handle.read()) == sha256:
+                    return candidate
+    return existing[0] if existing else candidates[0]
 
 
 def recount_target(target, root, report_dir=None):
@@ -88,7 +93,7 @@ def recount_target(target, root, report_dir=None):
         },
     }
     rel = evidence.get("path") or ""
-    path = resolve_evidence(root, rel, report_dir) if rel else ""
+    path = resolve_evidence(root, rel, report_dir, evidence.get("sha256")) if rel else ""
     if not records or not rel or not os.path.isfile(path):
         out["evidence"] = {"path": evidence.get("path"),
                            "found": bool(evidence.get("path")) and os.path.isfile(path)}
@@ -170,7 +175,8 @@ def main():
                     help="directory the report's evidence paths are relative to")
     ap.add_argument("--out", default=None, help="write the recount as JSON")
     ap.add_argument("--strict", action="store_true",
-                    help="exit 1 when the recount disagrees with the report")
+                    help="exit 1 when the recount disagrees with the report or notes a problem. "
+                         "Exit 2 always means some target had no usable evidence")
     args = ap.parse_args()
 
     with open(args.report, "rb") as handle:
@@ -208,7 +214,7 @@ def main():
           % (VERSION, os.path.basename(args.report), report.get("tool"), report.get("generated")))
     print("%-8s %-11s %-7s %-20s %-30s %s"
           % ("target", "kind", "trials", "report: corruption", "raw log: corruption aborts", "agree"))
-    disagree = False
+    disagree = []
     unknown = []
     problems = []
     for t in targets:
@@ -220,34 +226,45 @@ def main():
             problems.append("%s: %s" % (t["name"], why))
             unknown.append(t["name"])
             continue
-        raw_cell = "%d/%d (by %s)" % (t["recount"]["trials_with_heap_corruption"], t["trials"],
-                                      t["recount"]["attribution"])
-        print("%-8s %-11s %-7d %-20s %-30s %s"
-              % (t["name"], t["kind"], t["trials"],
-                 "%d/%d" % (t["report"]["corruption"], t["trials"]), raw_cell,
-                 "yes" if t["agrees_with_report"] else "NO"))
-        if not t["agrees_with_report"]:
-            disagree = True
-        if not t["evidence"]["matches_report_hash"]:
-            problems.append("%s: evidence log does not match the hash in the report" % t["name"])
-        if not t["evidence"]["covers_run"]:
-            problems.append("%s: evidence log does not span the whole run" % t["name"])
+        unusable = evidence_problems(t)
+        problems.extend("%s: %s" % (t["name"], why) for why in unusable)
         if t["recount"]["unattributed_notices"]:
             problems.append("%s: %d exit notice(s) in the run window match no trial"
                             % (t["name"], t["recount"]["unattributed_notices"]))
-        if t["evidence"]["access_log_utc_offsets"] not in ([], ["+0000"]):
-            problems.append("%s: log is not in UTC (%s); timestamps were compared as UTC"
-                            % (t["name"], ", ".join(t["evidence"]["access_log_utc_offsets"])))
+        raw_cell = "%d/%d (by %s)" % (t["recount"]["trials_with_heap_corruption"], t["trials"],
+                                      t["recount"]["attribution"])
+        if unusable:
+            # A log that is not the hashed file, or that does not cover the run, or
+            # whose times cannot be placed, can hide an abort. It cannot confirm a
+            # report, and a count from it cannot contradict one either.
+            verdict = "?"
+            unknown.append(t["name"])
+        elif t["agrees_with_report"]:
+            verdict = "yes"
+        else:
+            verdict = "NO"
+            disagree.append(t["name"])
+        print("%-8s %-11s %-7d %-20s %-30s %s"
+              % (t["name"], t["kind"], t["trials"],
+                 "%d/%d" % (t["report"]["corruption"], t["trials"]), raw_cell, verdict))
 
-    result["agrees_with_report"] = None if unknown else not disagree
-    result["problems"] = problems
-    if unknown:
-        print("\nThe recount is INCONCLUSIVE: no usable evidence for %s."
-              % ", ".join(unknown))
-    elif disagree:
-        print("\nThe recount DISAGREES with the report's per-trial corruption flags.")
+    # A disagreement found in usable evidence settles the question for the report
+    # as a whole; otherwise any target without usable evidence leaves it open.
+    if disagree:
+        result["agrees_with_report"] = False
+    elif unknown:
+        result["agrees_with_report"] = None
     else:
-        print("\nThe recount agrees with the report.")
+        result["agrees_with_report"] = True
+    result["problems"] = problems
+    print()
+    if disagree:
+        print("The recount DISAGREES with the report's per-trial corruption flags (%s)."
+              % ", ".join(disagree))
+    if unknown:
+        print("The recount is INCONCLUSIVE for %s: no usable evidence." % ", ".join(unknown))
+    if not disagree and not unknown:
+        print("The recount agrees with the report.")
     for problem in problems:
         print("note: " + problem)
 
@@ -259,6 +276,20 @@ def main():
     if unknown:
         return 2
     return 1 if (args.strict and (disagree or problems)) else 0
+
+
+def evidence_problems(target):
+    """Reasons a target's evidence cannot support a verdict; empty when it can."""
+    evidence = target["evidence"]
+    reasons = []
+    if not evidence["matches_report_hash"]:
+        reasons.append("evidence log does not match the hash in the report")
+    if not evidence["covers_run"]:
+        reasons.append("evidence log does not span the whole run")
+    if evidence["access_log_utc_offsets"] not in ([], ["+0000"]):
+        reasons.append("log is not in UTC (%s); its times cannot be placed in the run"
+                       % ", ".join(evidence["access_log_utc_offsets"]))
+    return reasons
 
 
 if __name__ == "__main__":

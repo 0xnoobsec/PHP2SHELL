@@ -139,6 +139,21 @@ class LogTimes(unittest.TestCase):
         self.assertIsNone(earliest_time(HEAP))
         self.assertEqual(log_time_span(HEAP), (None, None))
 
+    def test_span_starts_at_the_apache_start_up_notice(self):
+        # A container's whole log begins with Apache's own start-up lines, before
+        # any request. Leaving them out made a complete log look as if it began
+        # with the run's first request (found on the lab, 18 November 2026).
+        startup = ("[Thu Oct 22 21:03:41.734344 2026] [mpm_prefork:notice] [pid 1:tid 1] "
+                   "AH00163: Apache/2.4.69 (Debian) PHP/8.4.26 configured")
+        first, _last = log_time_span("\n".join([startup, ACCESS % 12]))
+        self.assertEqual(first, datetime(2026, 10, 22, 21, 3, 41, 734344, tzinfo=timezone.utc))
+
+    def test_a_request_line_that_looks_like_an_error_line_is_not_a_timestamp(self):
+        spoof = ('10.0.0.1 - - [22/Oct/2026:21:04:54 +0000] "GET /?[Thu Jan  1 00:00:00.000001 2026] '
+                 'HTTP/1.1" 200 5 "-" "x"')
+        first, _last = log_time_span(spoof)
+        self.assertEqual(first, datetime(2026, 10, 22, 21, 4, 54, tzinfo=timezone.utc))
+
     def test_span_runs_from_the_first_to_the_last_timestamp(self):
         text = "\n".join([ACCESS % 5] + abort_block(9, 329))
         first, last = log_time_span(text)

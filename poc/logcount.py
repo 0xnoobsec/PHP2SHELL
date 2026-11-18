@@ -57,6 +57,11 @@ _EXIT_NOTICE = re.compile(
 _ACCESS_TIME = re.compile(
     r"\[(?P<stamp>\d{2}/[A-Za-z]{3}/\d{4}:\d\d:\d\d:\d\d (?P<offset>[+-]\d{4}))\]"
 )
+# Any Apache error-log line, e.g. the start-up notice
+# [Wed Nov 18 16:07:01.734344 2026] [mpm_prefork:notice] [pid 1:tid 1] AH00163: ...
+_ERROR_TIME = re.compile(
+    r"^\[(?P<ts>[A-Za-z]{3} [A-Za-z]{3} +\d{1,2} \d\d:\d\d:\d\d\.\d+ \d{4})\] \["
+)
 
 
 def count_signals(text):
@@ -158,16 +163,24 @@ def access_log_offsets(text):
 
 
 def log_time_span(text, tz=timezone.utc):
-    """(earliest, latest) timestamp in a log, from access lines and exit notices.
+    """(earliest, latest) timestamp in a log, from request lines and error-log lines.
 
-    Used to check that a captured log covers a whole run. (None, None) when the
-    log carries no timestamp at all.
+    Used to check that a captured log covers a whole run. Error-log lines include
+    Apache's start-up notices, so a log captured over a container's whole life
+    reaches back to the moment the server started, before any request. (None,
+    None) when the log carries no timestamp at all.
     """
     times = [
         datetime.strptime(m.group("stamp"), "%d/%b/%Y:%H:%M:%S %z")
         for m in _ACCESS_TIME.finditer(text)
     ]
-    times.extend(notice["time"] for notice in parse_exit_notices(text, tz=tz))
+    for line in text.splitlines():
+        if _ACCESS_LINE.match(line):
+            continue
+        match = _ERROR_TIME.match(line)
+        if match:
+            stamp = " ".join(match.group("ts").split())
+            times.append(datetime.strptime(stamp, "%a %b %d %H:%M:%S.%f %Y").replace(tzinfo=tz))
     return (min(times), max(times)) if times else (None, None)
 
 
